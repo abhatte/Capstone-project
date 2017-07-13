@@ -1,0 +1,59 @@
+# Capstone Project Proposal
+
+*******
+
+## Abstract
+********
+**Insulin dependent diabetes mellitus** (IDDM) also known as **Type 1 diabetes** is a chronic illness characterised by the body’s inability to produce insulin due to the autoimmune destruction of the beta cells in the pancreas.
+
+Patients with type 1 diabetes mellitus (DM) require lifelong insulin therapy. Most require 2 or more injections of insulin daily, with doses adjusted on the basis of self-monitoring of blood glucose levels. Long-term management requires a multidisciplinary approach that includes physicians, nurses, dieticians, and selected specialists.
+
+Outpatient management of IDDM relies principally on three interventions: diet, exercise and exogenous insulin. Proper treatment requires careful consideration of all three interventions.
+
+This project will aim to find a pattern between these three interventions and their effect on blood glucose level.
+
+## Data
+******
+This project will use the diabetes dataset from AIM '94, available [here](https://archive.ics.uci.edu/ml/datasets/Diabetes). It was donated to the UCI Machine Learning Repository by Michael Kahn, MD, PhD, Washington University, St. Louis, MO.
+
+This dataset describes the basic physiology and patho-physiology of diabetes mellitus and its treatment. The data set consists of 4 attributes for 70 different patients over the period of several weeks to months.
+The attributes include: Date, Time, Code, Value
+
+The code field is deciphered as: insulin dose, pre or post-prandial blood glucose measurements, exercise activities etc.
+For example
+
+33 = Regular insulin dose 
+
+48 = Unspecified blood glucose measurement
+
+58 = Pre-breakfast blood glucose measurement
+
+63 = Post-supper blood glucose measurement
+
+69 = Typical exercise activity
+
+## Client
+******
+Primary clients would be physicians, nurses, dieticians, etc. The analysis would benefit the physicians to prescribe a suitable insulin therapy or in the management of hypo- or hyperglycaemia.
+Also, based on the relational pattern between different interventions, dieticians can derive an individual diet and exercise plan for the patients.
+In addition to that, it provides a basic platform for self-monitoring of blood glucose level for the patients.
+
+## Analysis approach
+*******
+The main steps which will be undertaken for this project are:
+
+* The “Value” column contains 000 Blood glucose values, these observations will be removed from the dataset assuming that these values were inserted when blood glucose was not measured.
+
+* The relation between an individual Code and blood glucose level to find the clusters can be done using statistics and exploratory data analysis.
+
+* Similarly, a relation between time slots and blood glucose level can be determined to find high, low trends.
+
+* Machine learning can be applied to this project if deemed appropriate.
+
+## Deliverables
+******
+The key deliverables for the project will be uploaded to GitHub Repository, which will include Code for the project, Final report explaining the problem, the approach and findings, and the Slide deck.
+
+
+
+
