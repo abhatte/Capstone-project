@@ -12,18 +12,6 @@ for(i in 1:70) {
   temp <- mutate(temp, FileName = i)
   master <- rbind(master, temp);
 }
-#master %>%
-#as.numeric(master$Value)
-#transmute(master$Value, gsub("000", "NA", x = "Value"))
-#as.numeric(master$Value)
-#is.na(master$Value) <- Value == "000"
-#filter(master, Value >= 1)
-#master %>% filter(!is.na(Value))
-#any(is.na(master))
-#sum(is.na(master))
-#summary(master)
-#str_replace(master$Value, "000", "NA")
-# 000 values are strings with str_detect
-#class(master$Value)
+
 newmaster <- master[! master$Value == "000",]
 length(unique(newmaster$Code))
