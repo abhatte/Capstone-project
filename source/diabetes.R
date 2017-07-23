@@ -59,7 +59,7 @@ newmaster1 <- newmaster[newmaster$code %in% c3,]
 ggplot(newmaster1, aes(factor(code), bg_value)) +
   geom_boxplot()
 
-
+#create 2 hour time intervals
 newmaster <- newmaster %>%
   mutate(time1 = gsub("^00:[0-9][0-9]:00|^01:[0-9][0-9]:00", "01", x = time))%>%
   mutate(time1 = gsub("^02:[0-9][0-9]:00|^03:[0-9][0-9]:00", "02", x = time1))%>%
@@ -75,7 +75,7 @@ newmaster <- newmaster %>%
   mutate(time1 = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "12", x = time1))
 
 
-#bg_level: 0-80 = Hypoglycemic, 81-199 = Normal, above 200 = Hyperglycemic
+#bg_level: 0-80mg/dl = Hypoglycemic, 81-199mg/dl = Normal, above 200mh/dl = Hyperglycemic
 newmaster <- newmaster %>%
   mutate(bg_conc = gsub("^([0-9]|[0-7][0-9]|80)$", "Hypoglycemia", x = bg_value))%>%
   mutate(bg_conc = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", "Normal", x = bg_conc))%>%
