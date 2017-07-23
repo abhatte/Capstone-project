@@ -27,6 +27,7 @@ newmaster <- subset(newmaster, code != "4" & code != "36" & code != "56")
 newmaster$bg_value <- as.numeric(newmaster$bg_value)
 #remove NAs from above
 newmaster <- na.omit(newmaster)
+write.csv(newmaster, file = "../data wrangling/diabetes_clean.csv")
 #check for NA = 8 NAs introduced by coercion in bg_value
 summary(newmaster)
 glimpse(newmaster)
