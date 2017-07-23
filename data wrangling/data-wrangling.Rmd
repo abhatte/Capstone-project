@@ -5,6 +5,7 @@
 The diabetes data set from UCI machine learning repository is relatively comprehensive and well put together and would not require any major transformations. 
 However, the it consist of data of  several weeks' to months' worth of outpatient care on 70 patients; which needs to be merged together to form a data frame.
 As the data missed column names, they are given as “date”, “time”, “code” & “bg_value”. Individual columns are read in specific format for date(MM-DD-YYYY) and time(HH:MM).
+An additional column "file_name" is added to specify the patient/ file number.
 
 ```
 library(readr)
