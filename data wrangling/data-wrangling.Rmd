@@ -3,7 +3,7 @@
 
 ## Reading the dataset
 The diabetes data set from UCI machine learning repository is relatively comprehensive and well put together and would not require any major transformations. 
-However, the it consist of data of  several weeks' to months' worth of outpatient care on 70 patients; which needs to be merged together to form a data frame.
+However, it consist of data of  several weeks' to months' worth of outpatient care on 70 patients; which needs to be merged together to form a data frame.
 As the data missed column names, they are given as “date”, “time”, “code” & “bg_value”. Individual columns are read in specific format for date(MM-DD-YYYY) and time(HH:MM).
 An additional column "file_name" is added to specify the patient/ file number.
 
@@ -31,7 +31,14 @@ for(i in 1:70) {
 
 ## Dealing with the missing values
 
-After initial inspection, it is found that there are some missing values in the “bg_value” column; in the form of “000" strings. As these values do not make any sense, considering that there are “0” blood glucose values for hypoglycaemia; the “000” values are be removed. In addition to that, other illogical values are also removed from “code” column.
+After initial inspection, it is found that there are some missing values in the “bg_value” column; in the form of “000" strings. As these values do not make any sense, considering that there are “0” blood glucose values for hypoglycaemia; the “000” values are be removed. In addition to that, other illogical values are also removed from “code” column. Also the Date column of master data set showed 40 NA’s.
+
+
+```
+   summary(master) 
+```
+
+To remove the missing values and NA’s, a new file is created called “newmaster” which contains the clean data
 
 ```
 newmaster <- subset(master, bg_value != "000" & bg_value != "3A”)
@@ -46,14 +53,14 @@ For exploratory data analysis, the “code” column is from a character to a nu
 newmaster$bg_value <- as.numeric(newmaster$bg_value)
 ```
 
-To make sure all the values in dataset make sense, the data is summarised
-
-```
-summary(newmaster)
-```
-
 All the NAs introduced after transforming the “bg_value” from character to numeric are then removed
 
 ```
 newmaster <- na.omit(newmaster)
+```
+
+To make sure all the values in dataset make sense, the data is summarised
+
+```
+summary(newmaster)
 ```
