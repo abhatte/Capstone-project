@@ -42,7 +42,7 @@ To remove the missing values and NA’s, a new file is created called “newmast
 
 ```
 newmaster <- subset(master, bg_value != "000" & bg_value != "3A”)
-newmaster <- subset(newmaster, code != "4" & code != "36" & code != "56”)
+newmaster <- subset(newmaster, code != "4" & code != "36" & code != "56")
 ```
 
 ## Formatting of data
