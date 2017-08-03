@@ -114,12 +114,12 @@ for(i in 1:70) {
   num = paste("", i, sep = "")
   if (i < 10) num = paste("0", i, sep = "")
   fname = paste("~/R Projects/diabetes-dataset/Diabetes-Data/data-", num, sep = "")
-  temp <- read_delim(fname, col_names = c("date", "time", "code", "bg_value"), 
+  temp <- read_delim(fname, col_names = c("date", "time", "code", "bg_conc"), 
    col_types = cols(
     date = col_date(format = "%m-%d-%Y"),
     time = col_time(format = "%R"),
     code = col_integer(),
-    bg_value = col_character()
+    bg_conc = col_character()
   ), "\t",
     escape_double = FALSE, trim_ws = TRUE);
   temp <- mutate(temp, file_name = i)
@@ -153,37 +153,120 @@ for(i in 1:70) {
   num = paste("", i, sep = "")
   if (i < 10) num = paste("0", i, sep = "")
   fname = paste("~/R Projects/diabetes-dataset/Diabetes-Data/data-", num, sep = "")
-  temp <- read_delim(fname, col_names = c("date", "time", "code", "bg_value"), 
+  temp <- read_delim(fname, col_names = c("date", "time", "code", "bg_conc"), 
    col_types = cols(
     date = col_date(format = "%m-%d-%Y"),
     time = col_time(format = "%R"),
     code = col_integer(),
-    bg_value = col_character()
+    bg_conc = col_character()
   ), "\t",
     escape_double = FALSE, trim_ws = TRUE);
   temp <- mutate(temp, file_name = i)
   master <- rbind(master, temp);
 }}
 ```
+
 Also while creating the master data frame it was noted that the date, time and code were character strings and were simultaneusly converted to a suitable format.
 
-After initial inspection, it was found that there were some missing values in the “bg_value” column; in the form of “000" strings. As these values do not make any sense, considering that there are 0 mg/dl blood glucose values; the “000” values were removed.
+After initial inspection, it was found that there were some missing values in the “bg_conc” column; in the form of “000" strings. As these values do not make any sense, considering that there are 0 mg/dl blood glucose values; the “000” values were removed.
 Additionally, other illogical values from code column and 40 NA's from date column were also removed.
 
 To do that a new file wass created called “newmaster” which contains the clean data.
 
-```
-newmaster <- subset(master, bg_value != "000" & bg_value != "3A”)
+```{r, include=FALSE}
+library(tidyr)
+newmaster <- subset(master, bg_conc != "000" & bg_conc != "3A")
 newmaster <- subset(newmaster, code != "4" & code != "36" & code != "56")
 ```
 
 Any additional formatting was done to make the data ready for visualisation.
 
-```
-newmaster$bg_value <- as.numeric(newmaster$bg_value)
+```{r, include=FALSE}
+newmaster$bg_conc <- as.numeric(newmaster$bg_conc)
 newmaster <- na.omit(newmaster)
 ```
 
 ```{r, echo=FALSE}
-head(newmaster)
+summary(newmaster)
 ```
+
+## Initial Data Exploration
+*****
+The purpose of the inital exploration was to gauge the relationship between the BG concentration and the associated codes to determine if there are any factors that determines the increase or decrease in BG concentration.
+
+Since bg_conc is the only numeric variable in the data set; it’s distribution was checked but plotting the histogram plot.
+
+```{r, echo=FALSE}
+library(ggplot2)
+qplot(newmaster$bg_conc,
+      geom="histogram",
+      binwidth = 5,  
+      main = "Histogram for Blood Glucose", 
+      xlab = "Blood Glucose",  
+      fill=I("black"), 
+      col=I("red"), 
+      alpha=I(0.2))
+```
+
+From this graph we can see that majority of readings for BG concentration are found to be Hypoglycaemic.
+
+Now that we have determined the distribution of BG concentration, the focus of the further data visualisation and exploration will be to deep dive into other variables and determine how they interact with one another.
+
+The following variables will be investigated in this section:
+
+* code vs BG concentration
+
++ time vs BG concentration 
+
+**code vs BG concentration**
+
+```{r, echo=FALSE}
+library(ggplot2)
+ggplot(newmaster, aes(factor(code), bg_conc)) +
+  geom_boxplot() +
+  labs(x = "Code", y = "BG concentration (mg/dl)")
+```
+Note that, there are 3 clear groups of codes.
+
+1. group 1: code 33 - 35
+
+2. group 2: code 48, 57 - 64
+
+3. group 3: code 65 - 72
+
+To gain a better perspective at this, let’s plot the graph of BG concentration vs code by grouping the codes into 3 sub categories.
+
+1. group 1: code 33 - 35
+
+```{r, echo=FALSE}
+library(ggplot2)
+c1 <- c(33:35)
+newmaster1 <- newmaster[newmaster$code %in% c1,]
+ggplot(newmaster1, aes(factor(code), bg_conc)) +
+  geom_boxplot() +
+  labs(x = "Code", y = "BG concentration (mg/dl)")
+```
+
+2. group 2: code 48, 57 - 64
+
+```{r, echo=FALSE}
+c2 <- c(48, 57:64)
+newmaster1 <- newmaster[newmaster$code %in% c2,]
+ggplot(newmaster1, aes(factor(code), bg_conc)) +
+  geom_boxplot() +
+  labs(x = "Code", y = "BG concentration (mg/dl)")
+```
+
+3. group 3: code 65 - 72
+
+```{r, echo=FALSE}
+c3 <- c(65:72)
+newmaster1 <- newmaster[newmaster$code %in% c3,]
+ggplot(newmaster1, aes(factor(code), bg_conc)) +
+  geom_boxplot() +
+  labs(x = "Code", y = "BG concentration (mg/dl)")
+```
+
+
+
+      
