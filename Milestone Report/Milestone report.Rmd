@@ -1,0 +1,189 @@
+# Capstone project milestone report
+*******
+Ashwini Bhatte
+2 August 2017
+
+##Introduction
+*******
+**Insulin dependent diabetes mellitus** (IDDM) also known as **Type 1 diabetes** is a chronic illness characterised by the body’s inability to produce insulin due to the autoimmune destruction of the beta cells in the pancreas.
+
+Patients with type 1 diabetes mellitus (DM) require lifelong insulin therapy. Most require 2 or more injections of insulin daily, with doses adjusted on the basis of self-monitoring of blood glucose levels. Long-term management requires a multidisciplinary approach that includes physicians, nurses, dieticians, and selected specialists.
+
+Outpatient management of IDDM relies principally on three interventions: diet, exercise and exogenous insulin. Proper treatment requires careful consideration of all three interventions.
+
+Patients with diabetes face a lifelong challenge to achieve and maintain blood glucose levels as close to the normal range as possible. With appropriate glycemic control, the risk of both microvascular and neuropathic complications is decreased markedly.
+In addition to being a lifelong disease, the treatment of DM is multifaceted making it necessary to take many variables  into account.
+
+The goal of this project is to extract understandable patterns and associations from data through data visualisation.
+
+## Dataset
+*****
+The dataset consists og 70 .tsv files and a data code and a domain description file.
+Each file out of the 70 different files represent the data for a single DM patient.
+Each file contain 4 attributes: Date, Time, Code, Value
+
+### Date
+The dataset covers several weeks' to months' worth of outpatient care on 70 patients.
+
+The date is in MM-DD-YYYY format.
+
+### Time
+Diabetes patient records were obtained from two sources: an automatic electronic recording device and paper records. The automatic device had an internal clock to timestamp events, whereas the paper records only provided "logical time" slots (breakfast, lunch, dinner, bedtime). For paper records, fixed times were assigned to breakfast (08:00), lunch (12:00), dinner (18:00), and bedtime (22:00).
+
+The time is in XX:YY format.
+
+### Code
+The Code field is deciphered as follows:
+
+33 = Regular insulin dose
+
+34 = NPH insulin dose
+
+35 = UltraLente insulin dose
+
+48 = Unspecified blood glucose measurement
+
+57 = Unspecified blood glucose measurement
+
+58 = Pre-breakfast blood glucose measurement
+
+59 = Post-breakfast blood glucose measurement
+
+60 = Pre-lunch blood glucose measurement
+
+61 = Post-lunch blood glucose measurement
+
+62 = Pre-supper blood glucose measurement
+
+63 = Post-supper blood glucose measurement
+
+64 = Pre-snack blood glucose measurement
+
+65 = Hypoglycemic symptoms
+
+66 = Typical meal ingestion
+
+67 = More-than-usual meal ingestion
+
+68 = Less-than-usual meal ingestion
+
+69 = Typical exercise activity
+
+70 = More-than-usual exercise activity
+
+71 = Less-than-usual exercise activity
+
+72 = Unspecified special event
+
+### Value
+This attribute represents a blood glucose (BG) concentration at a particular time after a particular activity (see Code).
+
+BG concentration vary even in individuals with normal pancreatic hormonal function. 
+
+**Normal person BG concentration**
+
+pre-meal: 80-120 mg/dl
+
+post-meal: 80-140 mg/dl
+
+**DM patient BG concentration**
+
+The target range for an individual with diabetes mellitus is very controversial.
+
+So to cut the Gordian knot,
+
+* it would be very desirable to keep 90% of all BG measurements < 200 mg/dl
++ average BG: 150 mg/dl or less
+
+**Hyperglycemia** (BG > 200 mg/dl, over several years) is associated with a poor long-term outcome with the risk of vascular complications.
+
+And **Hypoglycemia** (BG < 80) may have symptoms such as headache, abdominal pain, sweating. Additionally BG < 40 mg/dl may result in neuroglycopenic symptoms such as lethargy, weakness, disorientation, seizures and passing out.  
+
+
+
+### file_name
+This column has been added, which represents the patient number (1-70)
+
+
+```{r, include=FALSE}
+library(readr)
+library(dplyr)
+library(tidyr)
+{master <- data.frame()
+for(i in 1:70) {
+  num = paste("", i, sep = "")
+  if (i < 10) num = paste("0", i, sep = "")
+  fname = paste("~/R Projects/diabetes-dataset/Diabetes-Data/data-", num, sep = "")
+  temp <- read_delim(fname, col_names = c("date", "time", "code", "bg_value"), 
+   col_types = cols(
+    date = col_date(format = "%m-%d-%Y"),
+    time = col_time(format = "%R"),
+    code = col_integer(),
+    bg_value = col_character()
+  ), "\t",
+    escape_double = FALSE, trim_ws = TRUE);
+  temp <- mutate(temp, file_name = i)
+  master <- rbind(master, temp);
+}}
+```
+```{r}
+head(master)
+```
+
+## Data limitations
+*****
+The main limitation of this dataset is the occurence of Unspecified blood glucose measurement twice in the code feature. Since this is an important information, which can not be rejected; these two codes are treated separately.
+
+Also, it would have been useful to include demographics of a patient such as Age and Sex, to predict how blood glucose concentration varies.
+
+## Data wrangling and cleaning
+*****
+The diabetes data set from UCI machine learning repository is relatively comprehensive and well put together and did not require any major transformations.
+
+However, since there are 70 different .tsv files for individual patients, they need to be merged in a single data frame called as "master"
+
+After creating the master dataframe, a new variable called as file_name was added from 1 to 70 to identify the records of each patient.
+
+```
+library(readr)
+library(dplyr)
+library(tidyr)
+{master <- data.frame()
+for(i in 1:70) {
+  num = paste("", i, sep = "")
+  if (i < 10) num = paste("0", i, sep = "")
+  fname = paste("~/R Projects/diabetes-dataset/Diabetes-Data/data-", num, sep = "")
+  temp <- read_delim(fname, col_names = c("date", "time", "code", "bg_value"), 
+   col_types = cols(
+    date = col_date(format = "%m-%d-%Y"),
+    time = col_time(format = "%R"),
+    code = col_integer(),
+    bg_value = col_character()
+  ), "\t",
+    escape_double = FALSE, trim_ws = TRUE);
+  temp <- mutate(temp, file_name = i)
+  master <- rbind(master, temp);
+}}
+```
+Also while creating the master data frame it was noted that the date, time and code were character strings and were simultaneusly converted to a suitable format.
+
+After initial inspection, it was found that there were some missing values in the “bg_value” column; in the form of “000" strings. As these values do not make any sense, considering that there are 0 mg/dl blood glucose values; the “000” values were removed.
+Additionally, other illogical values from code column and 40 NA's from date column were also removed.
+
+To do that a new file wass created called “newmaster” which contains the clean data.
+
+```
+newmaster <- subset(master, bg_value != "000" & bg_value != "3A”)
+newmaster <- subset(newmaster, code != "4" & code != "36" & code != "56")
+```
+
+Any additional formatting was done to make the data ready for visualisation.
+
+```
+newmaster$bg_value <- as.numeric(newmaster$bg_value)
+newmaster <- na.omit(newmaster)
+```
+
+```{r, echo=FALSE}
+head(newmaster)
+```
