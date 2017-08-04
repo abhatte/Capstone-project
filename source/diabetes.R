@@ -49,25 +49,31 @@ qplot(newmaster$bg_conc,
 
 #working boxplot code
 ggplot(newmaster, aes(factor(code), bg_conc)) +
-  geom_boxplot()
+  geom_boxplot() +
+  labs(x = "Code", y = "BG concentration (mg/dl)")
 
-summary(newmaster)
+summary(newmaster$bg_conc)
 
 #grouped codes
 c1 <- c(33:35)
 newmaster1 <- newmaster[newmaster$code %in% c1,]
 ggplot(newmaster1, aes(factor(code), bg_conc)) +
-  geom_boxplot()
+  geom_boxplot() +
+  labs(x = "Code", y = "BG concentration (mg/dl)")
+
+summary(newmaster1$bg_conc)
 
 c2 <- c(48, 57:64)
 newmaster1 <- newmaster[newmaster$code %in% c2,]
 ggplot(newmaster1, aes(factor(code), bg_conc)) +
-  geom_boxplot()
+  geom_boxplot() +
+  labs(x = "Code", y = "BG concentration (mg/dl)")
 
 c3 <- c(65:72)
 newmaster1 <- newmaster[newmaster$code %in% c3,]
 ggplot(newmaster1, aes(factor(code), bg_conc)) +
-  geom_boxplot()
+  geom_boxplot() +
+  labs(x = "Code", y = "BG concentration (mg/dl)")
 
 #create 2 hour time intervals
 newmaster <- newmaster %>%
@@ -78,7 +84,7 @@ newmaster <- newmaster %>%
   mutate(time_grp = gsub("^08:[0-9][0-9]:00|^09:[0-9][0-9]:00", "08-10", x = time_grp))%>%
   mutate(time_grp = gsub("^10:[0-9][0-9]:00|^11:[0-9][0-9]:00", "10-12", x = time_grp))%>%
   mutate(time_grp = gsub("^12:[0-9][0-9]:00|^13:[0-9][0-9]:00", "12-14", x = time_grp))%>%
-  mutate(time_grp = gsub("^14:[0-9][0-9]:00|^15:[0-9][0-9]:00", "14-16", x = time1))%>%    
+  mutate(time_grp = gsub("^14:[0-9][0-9]:00|^15:[0-9][0-9]:00", "14-16", x = time_grp))%>%    
   mutate(time_grp = gsub("^16:[0-9][0-9]:00|^17:[0-9][0-9]:00", "16-18", x = time_grp))%>%
   mutate(time_grp = gsub("^18:[0-9][0-9]:00|^19:[0-9][0-9]:00", "18-20", x = time_grp))%>%     
   mutate(time_grp = gsub("^20:[0-9][0-9]:00|^21:[0-9][0-9]:00", "20-22", x = time_grp))%>%
@@ -100,7 +106,7 @@ newmaster <- newmaster %>%
  # ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
  #   geom_bar(stat = "identity")
 
-# working barchart with time1 vs count
+# working barchart with time_grp vs count
 ggplot(newmaster, aes(time_grp)) +
  geom_bar()
 
