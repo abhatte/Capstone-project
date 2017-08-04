@@ -64,16 +64,20 @@ ggplot(newmaster1, aes(factor(code), bg_conc)) +
 summary(newmaster1$bg_conc)
 
 c2 <- c(48, 57:64)
-newmaster1 <- newmaster[newmaster$code %in% c2,]
-ggplot(newmaster1, aes(factor(code), bg_conc)) +
+newmaster2 <- newmaster[newmaster$code %in% c2,]
+ggplot(newmaster2, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)")
 
+summary(newmaster2$bg_conc)
+
 c3 <- c(65:72)
-newmaster1 <- newmaster[newmaster$code %in% c3,]
-ggplot(newmaster1, aes(factor(code), bg_conc)) +
+newmaster3 <- newmaster[newmaster$code %in% c3,]
+ggplot(newmaster3, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)")
+
+summary(newmaster3$bg_conc)
 
 #create 2 hour time intervals
 newmaster <- newmaster %>%
@@ -91,57 +95,48 @@ newmaster <- newmaster %>%
   mutate(time_grp = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22-24", x = time_grp))
 
 
-#bg_level: 0-80mg/dl = Hypoglycemic, 81-199mg/dl = Normal, above 200mh/dl = Hyperglycemic
+#bg_level: 0-80mg/dl = Hypoglycaemic, 81-199mg/dl = Average, above 200mh/dl = Hyperglycemic
 newmaster <- newmaster %>%
   mutate(bg_symp = gsub("^([0-9]|[0-7][0-9]|80|1.5|2.5|3.5|4.5|6.5|7.5)$", 
                         "Hypoglycemia", x = bg_conc))%>%
-  mutate(bg_symp = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", "Normal", x = bg_symp))%>%
+  mutate(bg_symp = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", "Average", x = bg_symp))%>%
   mutate(bg_symp = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$", 
                         "Hyperglycemia", x = bg_symp))
-
-# bg_conc = bg_symp
-# bg_value = bg_conc
-# time1 = time_grp
 
  # ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
  #   geom_bar(stat = "identity")
 
 # working barchart with time_grp vs count
 ggplot(newmaster, aes(time_grp)) +
- geom_bar()
+ geom_bar() +
+ labs(x = "Hours")
 
 # working boxplot with time vs bg_conc 
 ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
-  geom_boxplot() 
+  geom_boxplot() +
+  labs(x = "Hours", y = "Blood glucose concentration")
 
 # working point plot
-ggplot(newmaster, aes(factor(time_grp), bg_conc, col = bg_conc)) +
+ggplot(newmaster, aes(factor(time_grp), bg_conc, col = bg_symp)) +
   geom_point()
 
 # boxplot with overlaid scatterplot
 ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
   geom_point() +
   geom_boxplot(alpha = 0.4) +
-  labs(x = "Hours", y = "Blood glucose value")
+  labs(x = "Hours", y = "Blood glucose concentration")
   # 10-15 increases, 22-24 increases
-
-# Add facet layer
-ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
-  geom_point() +
-  facet_grid(.~ factor(time_grp)) +
-  geom_boxplot(alpha = 0.4, width = 4.5)
-
-ggplot(newmaster, aes(factor(time_grp), bg_conc, col = bg_conc)) +
-  geom_point(alpha = 0.1) +
-  facet_grid(.~ bg_conc) +
-  geom_boxplot(position = "identity", width = 2.5)
-  
 
 ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
   geom_point(alpha = 0.3) +
   geom_jitter(width = 0.1) +
   geom_boxplot(alpha = 0.2) +
   labs(x = "Hours", y = "Blood glucose value")
+
+# Add facet layer
+ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
+  geom_point() +
+  facet_grid(.~ factor(time_grp)) +
+  geom_boxplot(alpha = 0.4, width = 4.5)
   
-glimpse(newmaster)
 
