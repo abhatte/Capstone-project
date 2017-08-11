@@ -11,7 +11,17 @@ Patients with type 1 diabetes mellitus (DM) require lifelong insulin therapy. Mo
 
 Outpatient management of IDDM relies principally on three interventions: diet, exercise and exogenous insulin. Proper treatment requires careful consideration of all three interventions.
 
-Patients with diabetes face a lifelong challenge to achieve and maintain blood glucose levels as close to the normal range as possible. With appropriate glycemic control, the risk of both microvascular and neuropathic complications is decreased markedly.
+Patients with diabetes face a lifelong challenge to achieve and maintain blood glucose levels as close to the normal range as possible.
+
+Hyperglycemia: BG > 200 mg/dl
+
+Average BG: 150 mg/dl
+
+Hypoglycemia: BG < 80 mg/dl
+
+But it is desirable to keep 90% of all BG measurements < 200 mg/dl.
+
+With appropriate glycemic control, the risk of both microvascular and neuropathic complications is decreased markedly.
 In addition to being a lifelong disease, the treatment of DM is multifaceted making it necessary to take many variables  into account.
 
 The goal of this project is to extract understandable patterns and associations from data through data visualisation.
@@ -126,6 +136,9 @@ for(i in 1:70) {
   master <- rbind(master, temp);
 }}
 ```
+
+Below is the overview(head) of the combined dataset
+
 ```{r, echo=FALSE}
 head(master)
 ```
@@ -230,7 +243,7 @@ newmaster <- newmaster %>%
 summary(newmaster)
 ```
 
-## Initial Data Exploration
+## Exploratory Data analysis
 *****
 The purpose of the inital exploration was to gauge the relationship between the BG concentration and the associated codes to determine if there are any factors that determines the increase or decrease in BG concentration.
 
@@ -248,7 +261,7 @@ qplot(newmaster$bg_conc,
       alpha=I(0.2))
 ```
 
-From this graph we can see that majority of readings for BG concentration are found to be Hypoglycaemic.
+From Histogram for Blood Glucose we can see that majority of readings for BG concentration are found to be Hypoglycaemic.
 
 Now that we have determined the distribution of BG concentration, the focus of the further data visualisation and exploration will be to deep dive into other variables and determine how they interact with one another.
 
@@ -264,10 +277,11 @@ _**Code vs Blood Glucose concentration**_
 library(ggplot2)
 ggplot(newmaster, aes(factor(code), bg_conc)) +
   geom_boxplot() +
-  labs(x = "Code", y = "BG concentration (mg/dl)")
+  labs(x = "Code", y = "BG concentration (mg/dl)") +
+  ggtitle("Relation between Code & Blood Glucose concentration", subtitle = "Figure 2")
 ```
 
-Note that, there are 3 clear groups of codes.
+In Figure 2, note that there are 3 clear groups of codes.
 
 To gain a better perspective at this, let’s plot the graph of BG concentration vs code by grouping the codes into 3 sub categories.
 
@@ -281,14 +295,15 @@ c1 <- c(33:35)
 newmaster1 <- newmaster[newmaster$code %in% c1,]
 ggplot(newmaster1, aes(factor(code), bg_conc)) +
   geom_boxplot() +
-  labs(x = "Code", y = "BG concentration (mg/dl)")
+  labs(x = "Code", y = "BG concentration (mg/dl)") +
+  ggtitle("Relation between Insulin dose & Blood Glucose concentration", subtitle = "Figure 3")
 ```
 
 ```{r, echo=FALSE}
 summary(newmaster1$bg_conc)
 ```
 
-From the above box plot, we can see that the BG concentation of a patient drops down after taking an exogenous insuline dose.
+From Figure 3, we can see that the BG concentation of a patient drops down after taking an exogenous insuline dose.
 
    Code  |     Type        | Onset of effect | Time of peak action | Effective duration
    ----- | --------------- |---------------- |-------------------- |-------------------
@@ -306,14 +321,15 @@ c2 <- c(48, 57:64)
 newmaster2 <- newmaster[newmaster$code %in% c2,]
 ggplot(newmaster2, aes(factor(code), bg_conc)) +
   geom_boxplot() +
-  labs(x = "Code", y = "BG concentration (mg/dl)")
+  labs(x = "Code", y = "BG concentration (mg/dl)") +
+  ggtitle("Relation between meal & Blood Glucose concentration", subtitle = "Figure 4")
 ```
 
 ```{r, echo=FALSE}
 summary(newmaster2$bg_conc)
 ```
 
-Here the type of insuline injected will determine the level of BG concentration across various patients.
+In Figure 4, the type of insuline injected will determine the level of BG concentration across various patients.
 
 Note that, in the box plot above, codes 58, 60, 62, 64 represent a pre meal BG concentration and codes 59, 61, 63 represent a post meal BG concentration.
 
@@ -321,19 +337,23 @@ Note that, in the box plot above, codes 58, 60, 62, 64 represent a pre meal BG c
 
 **3. group 3: code 65 - 72**
 
-The codes in this group represent any unusual activities related to meal or excercise and the Hypoglycaemic symptoms.
+The codes in this group represent any unusual activities related to meal or exercise and the Hypoglycaemic symptoms.
 
 ```{r, echo=FALSE}
 c3 <- c(65:72)
 newmaster3 <- newmaster[newmaster$code %in% c3,]
 ggplot(newmaster3, aes(factor(code), bg_conc)) +
   geom_boxplot() +
-  labs(x = "Code", y = "BG concentration (mg/dl)")
+  labs(x = "Code", y = "BG concentration (mg/dl)") +
+  ggtitle("Relation between exercise & Blood Glucose concentration", subtitle = "Figure 5")
 ```
 
 ```{r, echo=FALSE}
 summary(newmaster3$bg_conc)
 ```
+
+In figure 5, we see that all the BG concentration values are 0 mg/ml. Since code 65 represents the Hypoglycemic symptoms, it is normal to have BG concentration value around 0 mg/dl. But, for the remaining code, it is not logical. Hence we assume that these values were supposed to be measured but they are just the place holder for now.
+
 ---------
 
 _**Time vs Blood Glucose concentration **_
@@ -344,10 +364,11 @@ Which is why the time intervals of 2 hours (time_grp) were created (See data wra
 library(ggplot2)
 ggplot(newmaster, aes(time_grp)) +
  geom_bar() +
- labs(x = "Hours")
+ labs(x = "Hours") +
+ ggtitle("Histogram for time groups", subtitle = "Figure 6")
 ```
 
-From the graph, we can say that most of the BG concentration was measured from 6 - 10, 12 - 14 & from 16 -24.
+From Figure 6, we can say that most of the BG concentration was measured from 6 - 10, 12 - 14 & from 16 -24.
 
 --------
 
@@ -356,10 +377,11 @@ Now let’s get a clearer view of the relationship between time interval and BG 
 ```{r, echo=FALSE}
 ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
   geom_boxplot() +
-  labs(x = "Hours", y = "Blood glucose concentration")
+  labs(x = "Hours", y = "Blood glucose concentration") +
+  ggtitle("Relation between time interval & Blood Glucose concentration", subtitle = "Figure 7")
 ```
 
-Note that the BG concentration remains lower from 4 - 10 am assuming that these are pre breakfast measurements. 
+From Figure 7, we can say that the BG concentration remains lower from 4 - 10 am assuming that these are pre breakfast measurements. 
 Similarly, the hypoglycaemia is observed from 16 - 22 assuming they are pre meal measurements.
 
 However, BG concentration rises after a meal i.e from time slot 10 - 16 & 22 - 24.
