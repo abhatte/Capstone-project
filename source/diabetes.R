@@ -158,33 +158,40 @@ ggplot(newmaster, aes(time_grp)) +
 
   
 # Relationship between time interval and BG concentration box plot.
-
 ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
   geom_boxplot() +
   labs(x = "Hours", y = "Blood glucose concentration") +
   ggtitle("Relation between Insulin dose and Blood Glucose concentration", subtitle = "Figure 7")
 
-# see the distribution of values in a particular time interval
+
+# minimum number of measurements taken from 00 - 04 in the night. 
+#The maximum number of BG concentration are taken during the day time.
 ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
   geom_point(alpha = 0.1) +
   scale_shape(1, solid = FALSE) +
   geom_jitter(width = 0.1) +
   geom_boxplot(alpha = 0.2) +
-  labs(x = "Hours", y = "Blood glucose value")
+  labs(x = "Hours", y = "Blood glucose value") +
+  ggtitle("Distribution of blood glucose measurements over 24 hours", subtitle = "Figure 8")
 
-# working point plot
+
+# see the distribution of Hypoglycemia, average BG concentration and Hyperglycemia.
+# Each point here represents number of Blood glucose measurements by the patients in 24 hours
+# for several weeks or months.
 ggplot(newmaster, aes(factor(time_grp), bg_conc, col = bg_symp)) +
-  geom_point()
+  geom_point() +
+  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 9")
+
 
 # working plot Add facet layer
-
 newmaster$bg_symp <- factor(newmaster$bg_symp, levels = c("Hypoglycemia", "Average",
                                                           "Hyperglycemia"))
 ggplot(newmaster, aes(bg_symp, bg_conc, col = bg_symp)) +
   geom_point() +
   geom_boxplot(alpha = 0.4, width = 4.5) +
   facet_grid(.~ (bg_symp)) +
-  labs(x = "Symptoms", y = "Blood glucose concentration, mg/dl")
+  labs(x = "Symptoms", y = "Blood glucose concentration, mg/dl") +
+  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 10")
 
 # # boxplot with overlaid scatterplot
 # ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
