@@ -119,7 +119,7 @@ ggplot(newmaster3, aes(factor(code), bg_conc)) +
 
 summary(newmaster3$bg_conc)
 
-#Since time is a continuous variable, it will be difficult to export the data when time is 
+#Since time is a continuous variable, it will be difficult to explore the data when time is 
 #plotted on x- axis. Which is why the time intervals of 2 hours (time_grp) were created
 
 newmaster <- newmaster %>%
