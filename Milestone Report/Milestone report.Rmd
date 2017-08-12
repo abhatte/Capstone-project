@@ -112,8 +112,9 @@ And **Hypoglycemia** (BG < 80) may have symptoms such as headache, abdominal pai
 
 
 ### file_name
-This column has been added, which represents the patient number (1-70)
+This column has been added, to represents the patient number (1-70)
 
+Below is the overview (head) of the combined dataset
 
 ```{r, include=FALSE}
 library(readr)
@@ -137,9 +138,6 @@ for(i in 1:70) {
   master <- rbind(master, temp);
 }}
 ```
-
-Below is the overview (head) of the combined dataset
-
 ```{r, echo=FALSE}
 head(master)
 ```
@@ -166,10 +164,11 @@ Here are the data wrangling steps for diabetes data set
    + covert observations to a desirable format
    + bind observations from all 70 files to create master data frame
    
-```
+```{r, include=FALSE}
 library(readr)
 library(dplyr)
 library(tidyr)
+library(ggplot2)
 {master <- data.frame()
 for(i in 1:70) {
   num = paste("", i, sep = "")
@@ -429,6 +428,8 @@ ggplot(newmaster, aes(factor(time_grp), bg_conc, col = bg_symp)) +
 ```
 
 ----------
+
+In **Figure 10**, lets see the boxplot of symptoms and BG concentration
 
 ```{r, echo=FALSE}
 newmaster$bg_symp <- factor(newmaster$bg_symp, levels = c("Hypoglycemia", "Average",
