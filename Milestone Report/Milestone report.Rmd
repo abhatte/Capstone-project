@@ -13,13 +13,13 @@ Outpatient management of IDDM relies principally on three interventions: diet, e
 
 Patients with diabetes face a lifelong challenge to achieve and maintain blood glucose levels as close to the normal range as possible.
 
-Hyperglycemia: BG > 200 mg/dl
+**Hyperglycemia**: BG > 200 mg/dl
 
-Average BG: 150 mg/dl
+**Average BG**: 150 mg/dl
 
-Hypoglycemia: BG < 80 mg/dl
+**Hypoglycemia**: BG < 80 mg/dl
 
-But it is desirable to keep 90% of all BG measurements < 200 mg/dl.
+_But it is desirable to keep 90% of all BG measurements < 200 mg/dl._
 
 With appropriate glycemic control, the risk of both microvascular and neuropathic complications is decreased markedly.
 In addition to being a lifelong disease, the treatment of DM is multifaceted making it necessary to take many variables  into account.
@@ -119,6 +119,7 @@ This column has been added, which represents the patient number (1-70)
 library(readr)
 library(dplyr)
 library(tidyr)
+library(ggplot2)
 {master <- data.frame()
 for(i in 1:70) {
   num = paste("", i, sep = "")
@@ -137,7 +138,7 @@ for(i in 1:70) {
 }}
 ```
 
-Below is the overview(head) of the combined dataset
+Below is the overview (head) of the combined dataset
 
 ```{r, echo=FALSE}
 head(master)
@@ -153,10 +154,18 @@ Also, it would have been useful to include demographics of a patient such as Age
 *****
 The diabetes data set from UCI machine learning repository is relatively comprehensive and well put together and did not require any major transformations.
 
-However, since there are 70 different .tsv files for individual patients, they need to be merged in a single data frame called as "master"
+However, since there are 70 different .tsv files for individual patients, they need to be merged in a single data frame. 
 
-After creating the master dataframe, a new variable called as file_name was added from 1 to 70 to identify the records of each patient.
+Here are the data wrangling steps for diabetes data set
 
+1. Load the required libraries
+
+2. Create "master" data frame 
+   + Add variable file_name to represent file number / patient number (01:70)
+   + read all 70 files and add column names ("date", "time", "code", "bg_conc")
+   + covert observations to a desirable format
+   + bind observations from all 70 files to create master data frame
+   
 ```
 library(readr)
 library(dplyr)
@@ -179,27 +188,31 @@ for(i in 1:70) {
 }}
 ```
 
-Also while creating the master data frame it was noted that the date, time and code were character strings and were simultaneusly converted to a suitable format.
+3. create newmaster to clean the data
 
-After initial inspection, it was found that there were some missing values in the “bg_conc” column; in the form of “000" strings. As these values do not make any sense, considering that there are 0 mg/dl blood glucose values; the “000” values were removed.
-Additionally, other illogical values from code column and 40 NA's from date column were also removed.
+4. remove "000" & "3A" from bg_conc as they are illogical values
 
-To do that a new file wass created called “newmaster” which contains the clean data.
+5. newmaster contains code "4", "36, & "56", but since there is no entry of such codes in the data description, these values are removed as well
 
-```{r, include=FALSE}
+```{r, echo=TRUE}
 library(tidyr)
 newmaster <- subset(master, bg_conc != "000" & bg_conc != "3A")
 newmaster <- subset(newmaster, code != "4" & code != "36" & code != "56")
 ```
 
-Any additional formatting was done to make the data ready for visualisation.
+6. For further EDA, convert newmaster$bg_conc from character to numeric
 
-```{r, include=FALSE}
+```{r, echo=TRUE}
 newmaster$bg_conc <- as.numeric(newmaster$bg_conc)
+```
+
+7. remove NAs from above
+
+```{r, echo=TRUE}
 newmaster <- na.omit(newmaster)
 ```
 
-Two hour time bins were created to explore how time attribute affects the BG concentration
+8. Two hour time bins were created to explore how time attribute affects the BG concentration
 
 ```{r, echo=TRUE}
 library(dplyr)
@@ -220,7 +233,7 @@ newmaster <- newmaster %>%
 
 From BG concentration measurements, we can derive if the patient is Hypoglycemic, Hyperglycemic or has a blood glucose in average range. The average BG for a diebetic patient is, 150 mg/dl. 
 
-But as we have already discussed that it is desirable to keep 90% of all BG measurements < 200 mg/dl. 
+9. But as we have already discussed that it is desirable to keep 90% of all BG measurements < 200 mg/dl. 
 Therefore, we will create groups
 
 **Hypoglycemia**: BG < 80 mg/dl
@@ -281,7 +294,7 @@ ggplot(newmaster, aes(factor(code), bg_conc)) +
   ggtitle("Relation between Code & Blood Glucose concentration", subtitle = "Figure 2")
 ```
 
-In Figure 2, note that there are 3 clear groups of codes.
+In **Figure 2**, note that there are 3 clear groups of codes.
 
 To gain a better perspective at this, let’s plot the graph of BG concentration vs code by grouping the codes into 3 sub categories.
 
@@ -303,7 +316,7 @@ ggplot(newmaster1, aes(factor(code), bg_conc)) +
 summary(newmaster1$bg_conc)
 ```
 
-From Figure 3, we can see that the BG concentation of a patient drops down after taking an exogenous insuline dose.
+From **Figure 3**, we can see that the BG concentation of a patient drops down after taking an exogenous insuline dose.
 
    Code  |     Type        | Onset of effect | Time of peak action | Effective duration
    ----- | --------------- |---------------- |-------------------- |-------------------
@@ -329,7 +342,7 @@ ggplot(newmaster2, aes(factor(code), bg_conc)) +
 summary(newmaster2$bg_conc)
 ```
 
-In Figure 4, the type of insuline injected will determine the level of BG concentration across various patients.
+In **Figure 4**, the type of insuline injected will determine the level of BG concentration across various patients.
 
 Note that, in the box plot above, codes 58, 60, 62, 64 represent a pre meal BG concentration and codes 59, 61, 63 represent a post meal BG concentration.
 
@@ -352,7 +365,7 @@ ggplot(newmaster3, aes(factor(code), bg_conc)) +
 summary(newmaster3$bg_conc)
 ```
 
-In figure 5, we see that all the BG concentration values are 0 mg/ml. Since code 65 represents the Hypoglycemic symptoms, it is normal to have BG concentration value around 0 mg/dl. But, for the remaining code, it is not logical. Hence we assume that these values were supposed to be measured but they are just the place holder for now.
+In **figure 5**, we see that all the BG concentration values are 0 mg/ml. Since code 65 represents the Hypoglycemic symptoms, it is normal to have BG concentration value around 0 mg/dl. But, for the remaining code, it is not logical. Hence we assume that these values were supposed to be measured but they are just the place holder for now.
 
 ---------
 
@@ -368,7 +381,7 @@ ggplot(newmaster, aes(time_grp)) +
  ggtitle("Histogram for time groups", subtitle = "Figure 6")
 ```
 
-From Figure 6, we can say that most of the BG concentration was measured from 6 - 10, 12 - 14 & from 16 -24.
+From **Figure 6**, we can say that most of the BG concentration was measured from 6 - 10, 12 - 14 & from 16 -24.
 
 --------
 
@@ -381,11 +394,51 @@ ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
   ggtitle("Relation between time interval & Blood Glucose concentration", subtitle = "Figure 7")
 ```
 
-From Figure 7, we can say that the BG concentration remains lower from 4 - 10 am assuming that these are pre breakfast measurements. 
+From **Figure 7**, we can say that the BG concentration remains lower from 4 - 10 am assuming that these are pre breakfast measurements. 
 Similarly, the hypoglycaemia is observed from 16 - 22 assuming they are pre meal measurements.
 
 However, BG concentration rises after a meal i.e from time slot 10 - 16 & 22 - 24.
 
 --------
 
-      
+Now, let's see the distribution of BG measurements in individual time slots
+
+```{r, echo=FALSE}
+ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
+  geom_point(alpha = 0.1) +
+  scale_shape(1, solid = FALSE) +
+  geom_jitter(width = 0.1) +
+  geom_boxplot(alpha = 0.2) +
+  labs(x = "Hours", y = "Blood glucose value") +
+  ggtitle("Distribution of blood glucose measurements over 24 hours", subtitle = "Figure 8")
+```
+
+**Figure 8**, clearly shows that there were minimum number of measurements taken from 00 - 04 in the night. The maximum number of BG concentration are taken during the day time.
+
+--------
+
+As discussed already, we have categorised BG concentration into 3 sub categories: Hypoglycemia, average BG concentration and Hyperglycemia.
+
+The distribution of these 3 categories is shown below in the Figure 9 by simply plotting the points on time slots. Each point here represents number of Blood glucose measurements by the patients in 24 hours for several weeks or months.
+
+```{r, echo=FALSE}
+ggplot(newmaster, aes(factor(time_grp), bg_conc, col = bg_symp)) +
+  geom_point() +
+  labs(x = "Hours", y = "Blood glucose concentration") +
+  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 9")
+```
+
+----------
+
+```{r, echo=FALSE}
+newmaster$bg_symp <- factor(newmaster$bg_symp, levels = c("Hypoglycemia", "Average",
+                                                          "Hyperglycemia"))
+ggplot(newmaster, aes(bg_symp, bg_conc, col = bg_symp)) +
+  geom_point() +
+  geom_boxplot(alpha = 0.4, width = 4.5) +
+  facet_grid(.~ (bg_symp)) +
+  labs(x = "Symptoms", y = "Blood glucose concentration, mg/dl") +
+  ggtitle("Distribution of BG symptoms", subtitle = "Figure 10")
+```
+
+----------
