@@ -3,7 +3,7 @@
 Ashwini Bhatte
 2 August 2017
 
-##Introduction
+## Introduction
 *******
 **Insulin dependent diabetes mellitus** (IDDM) also known as **Type 1 diabetes** is a chronic illness characterised by the body’s inability to produce insulin due to the autoimmune destruction of the beta cells in the pancreas.
 
