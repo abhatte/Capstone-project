@@ -164,25 +164,17 @@ ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
   labs(x = "Hours", y = "Blood glucose concentration") +
   ggtitle("Relation between Insulin dose and Blood Glucose concentration", subtitle = "Figure 7")
 
-
-# working point plot
-ggplot(newmaster, aes(factor(time_grp), bg_conc, col = bg_symp)) +
-  geom_point()
-
-# boxplot with overlaid scatterplot
-ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
-  geom_point(alpha = 0.1) +
-  scale_shape(1, solid = FALSE) +
-  geom_boxplot(alpha = 0.4) +
-  labs(x = "Hours", y = "Blood glucose concentration")
-  # 10-15 increases, 22-24 increases
-
+# see the distribution of values in a particular time interval
 ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
   geom_point(alpha = 0.1) +
   scale_shape(1, solid = FALSE) +
   geom_jitter(width = 0.1) +
   geom_boxplot(alpha = 0.2) +
   labs(x = "Hours", y = "Blood glucose value")
+
+# working point plot
+ggplot(newmaster, aes(factor(time_grp), bg_conc, col = bg_symp)) +
+  geom_point()
 
 # working plot Add facet layer
 
@@ -193,5 +185,13 @@ ggplot(newmaster, aes(bg_symp, bg_conc, col = bg_symp)) +
   geom_boxplot(alpha = 0.4, width = 4.5) +
   facet_grid(.~ (bg_symp)) +
   labs(x = "Symptoms", y = "Blood glucose concentration, mg/dl")
+
+# # boxplot with overlaid scatterplot
+# ggplot(newmaster, aes(factor(time_grp), bg_conc)) +
+#   geom_point(alpha = 0.1) +
+#   scale_shape(1, solid = FALSE) +
+#   geom_boxplot(alpha = 0.4) +
+#   labs(x = "Hours", y = "Blood glucose concentration")
+
   
   
