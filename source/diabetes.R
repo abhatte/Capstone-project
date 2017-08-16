@@ -200,5 +200,24 @@ ggplot(newmaster, aes(bg_symp, bg_conc, col = bg_symp)) +
 #   geom_boxplot(alpha = 0.4) +
 #   labs(x = "Hours", y = "Blood glucose concentration")
 
-  
-  
+# machine learning
+# Let's add a new column "type" which represent a type of activity patient has done just before
+# or after measuring the BG
+# code        type of activity
+# 33 - 35       insulin dose
+# 58 - 64       meal (pre - post)
+# 69 - 71       exercise
+
+newmaster <- newmaster %>%
+  mutate(type = gsub("^(3[3-5])$", "insulin", x = code)) %>%
+  mutate(type = gsub("^(5[8-9]|6[0-4])$", "meal", x = type)) %>%
+  mutate(type = gsub("^(6[9]|7[0-1])$", "exercise", x = type))
+
+# To see the comparison between these 3 types of activities, let's plot a box plot
+
+ggplot(subset(newmaster,type %in% c("insulin", "meal", "exercise"))) + 
+  geom_boxplot(aes(factor(type), bg_conc, group=type, col=type)) +
+  labs(x = "Type of activity", y = "Blood glucose concentration, mg/dl") +
+  ggtitle("Comparison between type of activity and BG concentration", subtitle = "Figure 11")
+
+
