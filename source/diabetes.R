@@ -5,7 +5,7 @@ library(tidyr)
 library(ggplot2)
 
 # create an empty data frame
-master <- data.frame()
+df <- data.frame()
 # for loop for data files 1:70
 for(i in 1:70) {
   num = paste("", i, sep = "")
@@ -23,18 +23,18 @@ for(i in 1:70) {
     bg_conc = col_character()
   ), "\t",
     escape_double = FALSE, trim_ws = TRUE);
-# add file_name column to represent each patients records (1:70)
-  temp <- mutate(temp, file_name = i)
-# bind data files (1:70) & create master file
-  master <- rbind(master, temp);
+# add patient_num column to represent each patients records (1:70)
+  temp <- mutate(temp, patient_num = i)
+# bind data files (1:70) & create df file
+  df <- rbind(df, temp);
 }
 # check the class and NAs
-class(master)
-summary(master)
+class(df)
+summary(df)
 
 # create clean_df to clean the data
 ## remove "000" & "3A" from bg_conc as they are illogical values
-clean_df <- subset(master, bg_conc != "000" & bg_conc != "3A")
+clean_df <- subset(df, bg_conc != "000" & bg_conc != "3A")
 # clean_df contains code "4", "36, & "56", but since there is no entry of such codes in
 # the data description, these values are removed as well
 clean_df <- subset(clean_df, code != "4" & code != "36" & code != "56")
@@ -56,6 +56,7 @@ class(clean_df)
 
 # Since bg_conc is the only numeric variable in the data set; 
 # it’s distribution is observed by plotting the histogram.
+# Fig.1
 
 qplot(clean_df$bg_conc,
       geom="histogram",
@@ -76,6 +77,7 @@ qplot(clean_df$bg_conc,
 
 
 #Code vs Blood Glucose concentration
+# Fig.2
 ggplot(clean_df, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
@@ -87,6 +89,7 @@ summary(clean_df$bg_conc)
 #grouping the codes into 3 sub categories.
 
 # group 1: code 33 - 35 represents codes for type of insulin dose
+# Fig.3
 c1 <- c(33:35)
 clean_df1 <- clean_df[clean_df$code %in% c1,]
 ggplot(clean_df1, aes(factor(code), bg_conc)) +
@@ -96,23 +99,30 @@ ggplot(clean_df1, aes(factor(code), bg_conc)) +
 
 summary(clean_df1$bg_conc)
 
+# patients take NPH more often than other insulin types
+# Fig.4
+ggplot(clean_df1, aes(code)) +
+  geom_histogram()
+
 # group 2: code 48, 57 - 64 represents meal
+# Fig.5
 c2 <- c(48, 57:64)
 clean_df2 <- clean_df[clean_df$code %in% c2,]
 ggplot(clean_df2, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
-  ggtitle("Relation between Insulin dose and Blood Glucose concentration", subtitle = "Figure 4")
+  ggtitle("Relation between Insulin dose and Blood Glucose concentration", subtitle = "Figure 5")
 
 summary(clean_df2$bg_conc)
 
 #group 3: code 65 - 72 represents exercise
+# Fig.6
 c3 <- c(65:72)
 clean_df3 <- clean_df[clean_df$code %in% c3,]
 ggplot(clean_df3, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
-  ggtitle("Relation between exercise and Blood Glucose concentration", subtitle = "Figure 5")
+  ggtitle("Relation between exercise and Blood Glucose concentration", subtitle = "Figure 6")
 # code 65 represents the Hypoglycemic symptoms, it is normal to have BG concentration value 
 # around 0 mg/dl. But, for the remaining code, it is not logical. Hence we assume that these 
 # values were supposed to be measured but they are just the place holder for now.
@@ -148,49 +158,47 @@ clean_df <- clean_df %>%
                         "Hyperglycemia", x = bg_symp)) %>%
   mutate(bg_symp = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", "Hypoglycemia", x = bg_symp))
 
-clean_df <- clean_df %>%
-  mutate(symp_num = gsub("^([0-9]|[0-7][0-9]|80)$", 0, x = bg_conc))%>%
-  mutate(symp_num = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", 1, x = symp_num))%>%
-  mutate(symp_num = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$", 
-                        2, x = symp_num)) %>%
-  mutate(symp_num = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", 0, x = symp_num))
-
 
 # The distribution of BG measurements across various time intervals is explored using a simple
 # bar plot.
+# Fig.7
 ggplot(clean_df, aes(time_grp)) +
  geom_bar() +
  labs(x = "Hours") +
- ggtitle("Relation between Insulin dose and Blood Glucose concentration", subtitle = "Figure 6")
+ ggtitle("Relation between Insulin dose and Blood Glucose concentration", subtitle = "Figure 7")
 
   
 # Relationship between time interval and BG concentration box plot.
+# Fig.8
 ggplot(clean_df, aes(factor(time_grp), bg_conc)) +
   geom_boxplot() +
   labs(x = "Hours", y = "Blood glucose concentration") +
-  ggtitle("Relation between Insulin dose and Blood Glucose concentration", subtitle = "Figure 7")
+  ggtitle("Relation between Insulin dose and Blood Glucose concentration", subtitle = "Figure 8")
 
 
 # minimum number of measurements taken from 00 - 04 in the night. 
 #The maximum number of BG concentration are taken during the day time.
+# Fig.9
 ggplot(clean_df, aes(factor(time_grp), bg_conc)) +
   geom_point(alpha = 0.1) +
   scale_shape(1, solid = FALSE) +
   geom_jitter(width = 0.1) +
   geom_boxplot(alpha = 0.2) +
   labs(x = "Hours", y = "Blood glucose value") +
-  ggtitle("Distribution of blood glucose measurements over 24 hours", subtitle = "Figure 8")
+  ggtitle("Distribution of blood glucose measurements over 24 hours", subtitle = "Figure 9")
 
 
 # see the distribution of Hypoglycemia, average BG concentration and Hyperglycemia.
 # Each point here represents number of Blood glucose measurements by the patients in 24 hours
 # for several weeks or months.
+# Fig.10
 ggplot(clean_df, aes(factor(time_grp), bg_conc, col = bg_symp)) +
   geom_point() +
-  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 9")
+  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 10")
 
 
 # working plot Add facet layer
+# Fig.11
 clean_df$bg_symp <- factor(clean_df$bg_symp, levels = c("Hypoglycemia", "Average",
                                                           "Hyperglycemia"))
 ggplot(clean_df, aes(bg_symp, bg_conc, col = bg_symp)) +
@@ -198,14 +206,7 @@ ggplot(clean_df, aes(bg_symp, bg_conc, col = bg_symp)) +
   geom_boxplot(alpha = 0.4, width = 4.5) +
   facet_grid(.~ (bg_symp)) +
   labs(x = "Symptoms", y = "Blood glucose concentration, mg/dl") +
-  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 10")
-
-# # boxplot with overlaid scatterplot
-# ggplot(clean_df, aes(factor(time_grp), bg_conc)) +
-#   geom_point(alpha = 0.1) +
-#   scale_shape(1, solid = FALSE) +
-#   geom_boxplot(alpha = 0.4) +
-#   labs(x = "Hours", y = "Blood glucose concentration")
+  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 11")
 
 # machine learning
 # Let's add a new column "type" which represent a type of activity patient has done just before
@@ -221,27 +222,99 @@ clean_df <- clean_df %>%
   mutate(type = gsub("^(6[9]|7[0-1])$", "exercise", x = type))
 
 # To see the comparison between these 3 types of activities, let's plot a box plot
-
+# Fig.12
 ggplot(subset(clean_df,type %in% c("insulin", "meal", "exercise"))) + 
   geom_boxplot(aes(factor(type), bg_conc, group=type, col=type)) +
   labs(x = "Type of activity", y = "Blood glucose concentration, mg/dl") +
-  ggtitle("Comparison between type of activity and BG concentration", subtitle = "Figure 11")
+  ggtitle("Comparison between type of activity and BG concentration", subtitle = "Figure 12")
+# From fig.12, we can see that the blood glucose level decreases just after taking the isulin
+# dose. It even drops down further after the exercise. However, the BG notably increases 
+# after a meal with a median of around 150 mg/dl
+levels(clean_df$type)
+
+
+# Working Logistic regression model
+# predict the probability of a patient being hyperglycemic at a particular time
+
+#Add one more column similar to time_grp. this new column is called as "time_num", representing
+# time froups in a numeric format e.g. 00-02 time_grp = 00 time_num, vice versa
+clean_df <- clean_df %>%
+  mutate(time_num = gsub("^00:[0-9][0-9]:00|^01:[0-9][0-9]:00", "00", x = time))%>%
+  mutate(time_num = gsub("^02:[0-9][0-9]:00|^03:[0-9][0-9]:00", "02", x = time_num))%>%
+  mutate(time_num = gsub("^04:[0-9][0-9]:00|^05:[0-9][0-9]:00", "04", x = time_num))%>%   
+  mutate(time_num = gsub("^06:[0-9][0-9]:00|^07:[0-9][0-9]:00", "06", x = time_num))%>%
+  mutate(time_num = gsub("^08:[0-9][0-9]:00|^09:[0-9][0-9]:00", "08", x = time_num))%>%
+  mutate(time_num = gsub("^10:[0-9][0-9]:00|^11:[0-9][0-9]:00", "10", x = time_num))%>%
+  mutate(time_num = gsub("^12:[0-9][0-9]:00|^13:[0-9][0-9]:00", "12", x = time_num))%>%
+  mutate(time_num = gsub("^14:[0-9][0-9]:00|^15:[0-9][0-9]:00", "14", x = time_num))%>%    
+  mutate(time_num = gsub("^16:[0-9][0-9]:00|^17:[0-9][0-9]:00", "16", x = time_num))%>%
+  mutate(time_num = gsub("^18:[0-9][0-9]:00|^19:[0-9][0-9]:00", "18", x = time_num))%>%     
+  mutate(time_num = gsub("^20:[0-9][0-9]:00|^21:[0-9][0-9]:00", "20", x = time_num))%>%
+  mutate(time_num = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22", x = time_num))
+
+meal_df <- filter(clean_df, type == "meal")
+meal_df <- filter(meal_df, time_num <= 04)
+ggplot(meal_df, aes(factor(time_num), bg_conc, col = bg_symp)) +
+  geom_point(alpha = 0.2) +
+  geom_jitter()
+
+meal_df <- filter(meal_df, time_num >= 06 & time_num <= 12)
+ggplot(meal_df, aes(factor(time_num), bg_conc, col = bg_symp)) +
+  geom_point(alpha = 0.2) +
+  geom_jitter()
+
+
+# predict only Hyperglycemia
+# assign, Hyperglycemia = 1
+# Average, Hypoglycemia = 0
+# Store the results in a new column "symp_num"
+clean_df <- clean_df %>%
+  mutate(symp_num = gsub("^([0-9]|[0-7][0-9]|80)$", 0, x = bg_conc))%>%
+  mutate(symp_num = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", 0, x = symp_num))%>%
+  mutate(symp_num = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$", 
+                         1, x = symp_num)) %>%
+  mutate(symp_num = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", 0, x = symp_num))
+
+#convert these 2 new columns to the numeric vectors
+clean_df$time_num <- as.numeric(clean_df$time_num)
+clean_df$symp_num <- as.numeric(clean_df$symp_num)
 
 # Install required packages
 #install.packages("caTools")
 library(caTools)
-
 set.seed(144)
-
-clean_df$symp_num <- as.numeric(clean_df$symp_num)
-
+# split data into  70:30 ratio
 split <- sample.split(clean_df$symp_num, SplitRatio = 0.7)
 train <- subset(clean_df, split == TRUE)
 test <- subset(clean_df, split == FALSE)
 
-
-sympLog <- glm(symp_num~bg_conc, data = train)
+str(train)
+# create a model
+sympLog <- glm(symp_num~time_num, data = train)
 summary(sympLog)
 
 predictTest <- predict(sympLog, type = "response", newdata = test)
-table(test$bg_symp, predictTest > 0.5)
+table(test$symp_num, predictTest > 0.1)
+# Our model rarely predicts BG_symp above 10%
+# Precision
+
+# # Accurary of the model
+# (52+1149)/(52+7447+71149) # 1.53%
+# # Accurary of the baseline method
+# (52+7447)/(52+7447+71149) # 9.53%
+
+# lets predict the probability of being hyperglycemic after 22.00
+# lets assign hypogly. & average == 0
+# hypergly. = 1
+
+# str(clean_df$symp_num)
+# distances <- dist(clean_df$symp_num, method = "euclidean")
+# cluster_symp <- hclust(distances, method = "ward")
+# plot(cluster_symp)
+# clusterGroups <- cutree(cluster_bg, k = 3)
+# tapply(clean_df$symp_num, clusterGroups, mean)
+
+
+
+
+
