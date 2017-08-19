@@ -1,8 +1,10 @@
-# load the libraries
+# Install required packages and load the libraries
+#install.packages("caTools")
 library(readr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(caTools)
 
 # create an empty data frame
 df <- data.frame()
@@ -153,8 +155,8 @@ clean_df <- clean_df %>%
 
 clean_df <- clean_df %>%
   mutate(bg_symp = gsub("^([0-9]|[0-7][0-9]|80)$", "Hypoglycemia", x = bg_conc))%>%
-  mutate(bg_symp = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", "Average", x = bg_symp))%>%
-  mutate(bg_symp = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$", 
+  mutate(bg_symp = gsub("^(8[1-9]|9[0-9]|1[0-4][0-9]|150)$", "Average", x = bg_symp))%>%
+  mutate(bg_symp = gsub("^(15[1-9]|1[6-9][0-9]|2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$", 
                         "Hyperglycemia", x = bg_symp)) %>%
   mutate(bg_symp = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", "Hypoglycemia", x = bg_symp))
 
@@ -194,6 +196,7 @@ ggplot(clean_df, aes(factor(time_grp), bg_conc)) +
 # Fig.10
 ggplot(clean_df, aes(factor(time_grp), bg_conc, col = bg_symp)) +
   geom_point() +
+  labs(x = "Hours", y = "Blood glucose value")
   ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 10")
 
 
@@ -253,12 +256,13 @@ clean_df <- clean_df %>%
   mutate(time_num = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22", x = time_num))
 
 meal_df <- filter(clean_df, type == "meal")
-meal_df <- filter(meal_df, time_num <= 04)
+meal_df <- filter(meal_df, time_num <= 4)
 ggplot(meal_df, aes(factor(time_num), bg_conc, col = bg_symp)) +
   geom_point(alpha = 0.2) +
   geom_jitter()
 
-meal_df <- filter(meal_df, time_num >= 06 & time_num <= 12)
+meal_df$time_num <- as.numeric(meal_df$time_num)
+meal_df <- filter(clean_df, time_num >= 6 & time_num <= 12)
 ggplot(meal_df, aes(factor(time_num), bg_conc, col = bg_symp)) +
   geom_point(alpha = 0.2) +
   geom_jitter()
@@ -279,17 +283,16 @@ clean_df <- clean_df %>%
 clean_df$time_num <- as.numeric(clean_df$time_num)
 clean_df$symp_num <- as.numeric(clean_df$symp_num)
 
-# Install required packages
-#install.packages("caTools")
-library(caTools)
-set.seed(144)
+
+set.seed(840)
 # split data into  70:30 ratio
 split <- sample.split(clean_df$symp_num, SplitRatio = 0.7)
 train <- subset(clean_df, split == TRUE)
 test <- subset(clean_df, split == FALSE)
-
+test <- test[-test$symp_num]
+summary(test)
 str(train)
-# create a model
+# create a model hyperglycemia~time
 sympLog <- glm(symp_num~time_num, data = train)
 summary(sympLog)
 
@@ -299,10 +302,12 @@ table(test$symp_num, predictTest > 0.1)
 # Precision
 
 # # Accurary of the model
-# (52+1149)/(52+7447+71149) # 1.53%
+# (52+1149)/(52+7447+7+1149) # 13%
 # # Accurary of the baseline method
-# (52+7447)/(52+7447+71149) # 9.53%
+# (52+7447)/(52+7447+7+1149) # 86%
 
+(23+1153)/(23+7476+3+1153)
+(23+7476)/(23+7476+3+1153)
 # lets predict the probability of being hyperglycemic after 22.00
 # lets assign hypogly. & average == 0
 # hypergly. = 1
@@ -314,7 +319,21 @@ table(test$symp_num, predictTest > 0.1)
 # clusterGroups <- cutree(cluster_bg, k = 3)
 # tapply(clean_df$symp_num, clusterGroups, mean)
 
+# create a model hyperglycemia~type(meal, insulin, exercise)
+sympLog1 <- glm(symp_num~type, data = train)
+summary(sympLog1)
+predictTest <- predict(sympLog1, type = "response", newdata = test)
+table(test$symp_num, predictTest > 0.2)
+# Accurary of the model
+(4611+1154)/(4611+2888+2+1154) # 66.7%
+
+# Accurary of the baseline method
+(4611+2888)/(4611+2888+2+1154) # 86.64%
 
 
-
-
+sympLog2 <- glm(symp_num~bg_conc, data = train)
+summary(sympLog2)
+predictTest <- predict(sympLog2, type = "response", newdata = test)
+table(test$symp_num, predictTest > 0.3)
+(6383+1156)/(6383+1116+0+1156) # 87%
+(1116)/(6383+1116+0+1156) #12.9%
