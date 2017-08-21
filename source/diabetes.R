@@ -87,6 +87,39 @@ clean_df <- clean_df %>%
 
 clean_df$code <- as.factor(clean_df$code)
 
+# Let's add a new column "activity" which represent a type of activity patient has done just
+# before or after measuring the BG
+# code        type of activity
+# 33 - 35       insulin dose
+# 58 - 64       meal (pre - post)
+# 69 - 71       exercise
+
+clean_df <- clean_df %>%
+  mutate(activity = gsub("^(3[3-5])$", "insulin", x = code)) %>%
+  mutate(activity = gsub("^(5[8-9]|6[0-4]|66|67|68)$", "meal", x = activity)) %>%
+  mutate(activity = gsub("^(6[9]|7[0-1])$", "exercise", x = activity)) %>%
+  mutate(activity = gsub("^(48|57|72)$", "unspecified", x = activity)) %>%
+  mutate(activity = gsub("^(65)$", "hypo-measurement", x = activity))
+
+# Add one more column similar to the time_bin. 
+# This represents time groups in a numeric format e.g. 00-02 time_bin = 0 bin_num, etc.
+clean_df <- clean_df %>%
+  mutate(bin_num = gsub("^00:[0-9][0-9]:00|^01:[0-9][0-9]:00", "0", x = time))%>%
+  mutate(bin_num = gsub("^02:[0-9][0-9]:00|^03:[0-9][0-9]:00", "2", x = bin_num))%>%
+  mutate(bin_num = gsub("^04:[0-9][0-9]:00|^05:[0-9][0-9]:00", "4", x = bin_num))%>%   
+  mutate(bin_num = gsub("^06:[0-9][0-9]:00|^07:[0-9][0-9]:00", "6", x = bin_num))%>%
+  mutate(bin_num = gsub("^08:[0-9][0-9]:00|^09:[0-9][0-9]:00", "8", x = bin_num))%>%
+  mutate(bin_num = gsub("^10:[0-9][0-9]:00|^11:[0-9][0-9]:00", "10", x = bin_num))%>%
+  mutate(bin_num = gsub("^12:[0-9][0-9]:00|^13:[0-9][0-9]:00", "12", x = bin_num))%>%
+  mutate(bin_num = gsub("^14:[0-9][0-9]:00|^15:[0-9][0-9]:00", "14", x = bin_num))%>%    
+  mutate(bin_num = gsub("^16:[0-9][0-9]:00|^17:[0-9][0-9]:00", "16", x = bin_num))%>%
+  mutate(bin_num = gsub("^18:[0-9][0-9]:00|^19:[0-9][0-9]:00", "18", x = bin_num))%>%     
+  mutate(bin_num = gsub("^20:[0-9][0-9]:00|^21:[0-9][0-9]:00", "20", x = bin_num))%>%
+  mutate(bin_num = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22", x = bin_num))
+
+str(clean_df)
+clean_df$bin_num <- as.numeric(clean_df$bin_num)
+
 ## Exploratory data analysis
 # Since bg_conc is the only numeric variable in the data set; 
 # it’s distribution is observed by plotting the histogram.
@@ -146,7 +179,7 @@ summary(code_df1$bg_conc)
 # patients take Regular insulin dose more often than NPH and Ultralente insulin dose 
 # Fig.5
 ggplot(code_df1, aes(factor(code))) +
-  geom_histogram(stat = "count", fill= "blue", col= "black", alpha= 0.5) +
+  geom_histogram(stat = "count", fill= "black", col= "red", alpha= 0.2) +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
   ggtitle("Distribution of code (Insulin)", subtitle = "Figure 5")
   
@@ -163,9 +196,9 @@ ggplot(code_df2, aes(factor(code), bg_conc)) +
 summary(code_df2$bg_conc)
 
 # Histogram Distribution of measurements based on Pre/ Post Meal
-# Fig. 8
+# Fig. 7
 ggplot(code_df2, aes(factor(code))) +
-  geom_histogram(fill= "blue", col= "black", alpha= 0.5, stat = "count") +
+  geom_histogram(fill= "black", col= "red", alpha= 0.2, stat = "count") +
   labs(x = "Codes representing Meal", y = "BG concentration (mg/dl)") +
   ggtitle("Distribution of measurements based on Pre/ Post Meal", subtitle = "Figure 7")
 # patients rarely measured BG after a meal
@@ -184,6 +217,17 @@ ggplot(code_df3, aes(factor(code), bg_conc)) +
 
 summary(code_df3$bg_conc)
 
+# To see the comparison between these 3 types of activities, let's plot a box plot
+# Fig.9
+ggplot(clean_df, aes(factor(activity), bg_conc, group=activity, col=activity)) +
+  geom_point() +
+  geom_boxplot() +
+  labs(x = "Type of activity", y = "Blood glucose concentration, mg/dl") +
+  ggtitle("Comparison between activity and BG concentration", subtitle = "Figure 9")
+# From fig.14, we can see that the blood glucose level decreases just after taking the isulin
+# dose. It even drops down further after the exercise. However, the BG notably increases 
+# after a meal with a median of around 150 mg/dl
+
 
 ## 2. Time vs Blood Glucose concentration
 
@@ -192,44 +236,44 @@ summary(code_df3$bg_conc)
 
 # The distribution of BG measurements across various time intervals is explored using a simple
 # bar plot.
-# Fig.9
+# Fig.10
 ggplot(clean_df, aes(factor(time_bin))) +
  geom_histogram(stat = "count", fill= "black", col= "red", alpha= 0.5) +
  labs(x = "Hours") +
- ggtitle("Distribition of BG measurements across time", subtitle = "Figure 9")
+ ggtitle("Distribition of BG measurements across time", subtitle = "Figure 10")
 
   
 # Relationship between time interval and BG concentration box plot.
-# Fig.10
+# Fig.11
 ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
   geom_boxplot() +
   labs(x = "Hours", y = "Blood glucose concentration") +
   ggtitle("Relation between time and BG concentration", subtitle = "Figure 
-          10")
+          11")
 
 
 # minimum number of measurements taken from 00 - 04 in the night. 
 #The maximum number of BG concentration are taken during the day time.
-# Fig.11
+# Fig.12
 ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
   geom_point(alpha = 0.1) +
   scale_shape(1, solid = FALSE) +
   geom_jitter(width = 0.1) +
   geom_boxplot(alpha = 0.2) +
   labs(x = "Hours", y = "Blood glucose value mg/dl") +
-  ggtitle("Distribution of blood glucose measurements over 24 hours", subtitle = "Figure 11")
+  ggtitle("Distribution of blood glucose measurements over 24 hours", subtitle = "Figure 12")
 
 
 # see the distribution of Hypoglycemia, Normal BG concentration and Hyperglycemia.
 # Each point here represents number of Blood glucose measurements by the patients in 24 hours
 # for several weeks or months.
-# Fig.12
+# Fig.13
 
 ggplot(clean_df, aes(factor(time_bin), bg_conc, col = symptom)) +
   geom_point() +
   geom_jitter() +
   labs(x = "Hours", y = "Blood glucose value mg/dl") +
-  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 12")
+  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 13")
 # We do not see any precise time at which the patient was particulary showing Hypoglycemic or
 # Hyperglycemic symptoms. As it is distributed across 24 hours. However we can say that
 # there are comparatively less measurements showing these symptoms from 00 - 04 in the morning
@@ -237,7 +281,7 @@ ggplot(clean_df, aes(factor(time_bin), bg_conc, col = symptom)) +
 # time intervals.
 
 # working plot Add facet layer
-# Fig.13
+# Fig.14
 clean_df$symptom <- factor(clean_df$symptom, levels = c("Hypoglycemia", "Normal",
                                                           "Hyperglycemia"))
 ggplot(clean_df, aes(symptom, bg_conc, col = symptom)) +
@@ -245,56 +289,10 @@ ggplot(clean_df, aes(symptom, bg_conc, col = symptom)) +
   geom_boxplot(alpha = 0.4, width = 4.5) +
   facet_grid(.~ (symptom)) +
   labs(x = "Symptoms", y = "Blood glucose concentration, mg/dl") +
-  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 13")
-
-# machine learning
-# Let's add a new column "activity" which represent a type of activity patient has done just
-# before or after measuring the BG
-# code        type of activity
-# 33 - 35       insulin dose
-# 58 - 64       meal (pre - post)
-# 69 - 71       exercise
-
-clean_df <- clean_df %>%
-  mutate(activity = gsub("^(3[3-5])$", "insulin", x = code)) %>%
-  mutate(activity = gsub("^(5[8-9]|6[0-4]|66|67|68)$", "meal", x = activity)) %>%
-  mutate(activity = gsub("^(6[9]|7[0-1])$", "exercise", x = activity)) %>%
-  mutate(activity = gsub("^(48|57|72)$", "unspecified", x = activity)) %>%
-  mutate(activity = gsub("^(65)$", "hypo-measurement", x = activity))
-
-# To see the comparison between these 3 types of activities, let's plot a box plot
-# Fig.14
-ggplot(clean_df, aes(factor(activity), bg_conc, group=activity, col=activity)) +
-  geom_point() +
-  geom_boxplot() +
-  labs(x = "Type of activity", y = "Blood glucose concentration, mg/dl") +
-  ggtitle("Comparison between activity and BG concentration", subtitle = "Figure 14")
-# From fig.14, we can see that the blood glucose level decreases just after taking the isulin
-# dose. It even drops down further after the exercise. However, the BG notably increases 
-# after a meal with a median of around 150 mg/dl
+  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 14")
 
 
 ## Machine learning
-# predict the probability of a patient being hyperglycemic at a particular time
-
-#Add one more column similar to the time_bin. this new column is called as "bin_num", 
-# representing time groups in a numeric format e.g. 00-02 time_bin = 0 bin_num, etc.
-clean_df <- clean_df %>%
-  mutate(bin_num = gsub("^00:[0-9][0-9]:00|^01:[0-9][0-9]:00", "0", x = time))%>%
-  mutate(bin_num = gsub("^02:[0-9][0-9]:00|^03:[0-9][0-9]:00", "2", x = bin_num))%>%
-  mutate(bin_num = gsub("^04:[0-9][0-9]:00|^05:[0-9][0-9]:00", "4", x = bin_num))%>%   
-  mutate(bin_num = gsub("^06:[0-9][0-9]:00|^07:[0-9][0-9]:00", "6", x = bin_num))%>%
-  mutate(bin_num = gsub("^08:[0-9][0-9]:00|^09:[0-9][0-9]:00", "8", x = bin_num))%>%
-  mutate(bin_num = gsub("^10:[0-9][0-9]:00|^11:[0-9][0-9]:00", "10", x = bin_num))%>%
-  mutate(bin_num = gsub("^12:[0-9][0-9]:00|^13:[0-9][0-9]:00", "12", x = bin_num))%>%
-  mutate(bin_num = gsub("^14:[0-9][0-9]:00|^15:[0-9][0-9]:00", "14", x = bin_num))%>%    
-  mutate(bin_num = gsub("^16:[0-9][0-9]:00|^17:[0-9][0-9]:00", "16", x = bin_num))%>%
-  mutate(bin_num = gsub("^18:[0-9][0-9]:00|^19:[0-9][0-9]:00", "18", x = bin_num))%>%     
-  mutate(bin_num = gsub("^20:[0-9][0-9]:00|^21:[0-9][0-9]:00", "20", x = bin_num))%>%
-  mutate(bin_num = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22", x = bin_num))
-
-str(clean_df)
-clean_df$bin_num <- as.numeric(clean_df$bin_num)
 
 # assign, Normal = 1
 # Hypoglycemia = 2
@@ -321,7 +319,6 @@ str(clean_df)
 binom.df <- clean_df
 # assign hyperglycemia = 1
 # Normal, Hypoglycemia = 0
-
 binom.df <- binom.df %>%
   mutate(sympcode = gsub("^([0-9]|[0-7][0-9]|80)$", 0, x = bg_conc))%>%
   mutate(sympcode = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", 0, x = sympcode))%>%
@@ -346,7 +343,7 @@ symp.mod.tab <- coef(summary(symp.mod))
 symp.mod.tab[, "Estimate"] <- exp(coef(symp.mod))
 symp.mod.tab
 
-# If a patient takes exogenous insulin dose (33, 34, 35), what is the prob of 
+# If a patient takes exogenous insulin dose (33, 34, 35), what is the probability of 
 # having hyperglycemic symptoms before or after a meal?
 
 predDat <- with(binom.df,
@@ -361,8 +358,9 @@ cbind(predDat, predict(symp.mod, type = "response",
 # 3% probability of having hyperglycemic symptoms if he has taken Regular insulin dose, 
 # 2% if NPH and 2% if Ultralente insulin dose.
 
-# # Let's predict the probability of being diagnosed with hyperglycemia
-# # based on time and patient number
+
+# predicting the probability of a patient being hyperglycemic at a particular time
+# based on time and patient number
 symp.mod1 <- glm(sympcode~bin_num+patient_num+activity,
                 data=binom.df, family="binomial")
 
