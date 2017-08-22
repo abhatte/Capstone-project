@@ -1,10 +1,12 @@
 # Install required packages and load the libraries
 #install.packages("caTools")
+install.packages("ROCR")
 library(readr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(caTools)
+library(ROCR)
 library(nnet)
 
 ## Load the data sets
@@ -380,9 +382,17 @@ cbind(predDat1, predict(symp.mod1, type = "response",
 
 
 ## Predicting Hyperglycemic symptoms bases on codes
+
+str(binom.df)
+table(binom.df$sympcode)
+# 24995 patients not hyperglycemic & 3851 are hyperglycemic
+# since not hyperglycemic are more common than hyperglycemic, we'll predict all patients are
+# not hyperglycemic
+24995/28847
+# Baseline model accuracy = 87%
+
 set.seed(844)
 # split data into  70:30 ratio
-
 split <- sample.split(binom.df$sympcode, SplitRatio = 0.7)
 train <- subset(binom.df, split == TRUE)
 test <- subset(binom.df, split == FALSE)
@@ -390,14 +400,33 @@ test <- subset(binom.df, split == FALSE)
 test$sympcode <- as.numeric(test$sympcode)
 test <- test[-test$sympcode]
 
-symp.mod2 <- glm(sympcode~code, data = train, family = "binomial")
+symp.mod2 <- glm(sympcode~code+bin_num, data = train, family = "binomial")
 summary(symp.mod2)
-test.predict <- predict(symp.mod2, activity = "response", newdata = test)
-table(test$sympcode, test.predict > 0.1)
-# Accurary of the model
-(7434+0)/(7434+65+1156+0) # 86%
-#Accurary of the baseline method
-(7434+65)/(7434+65+1156+0) # 87%
+# higher value in coefficients table are indicative of hyperglycemia
+pred.train <- predict(symp.mod2, type = "response")
+summary(pred.train)
+tapply(pred.train, train$sympcode, mean)
+# all true hyperglycemia = 17.2% predicted probability
+# all true not hyperglycemia = 12.7% predicted probability
+table(train$sympcode, pred.train > 0.1)
+# sensitivity
+2692/(4+2692) # 0.99
+# specificity
+10069/(10069+7427) #0.57
+
+
+
+# # test.predict <- predict(symp.mod2, activity = "response", newdata = test)
+# # table(test$sympcode, test.predict > 0.1)
+# # Accurary of the model
+# (7434+0)/(7434+65+1156+0) # 0.85
+# #Accurary of the baseline method
+# (7434+65)/(7434+65+1156+0) # 0.86
+
+# ROC curve
+ROCRpred <- prediction(pred.train, train$sympcode)
+ROCRperf <- performance(ROCRpred, "tpr", "fpr")
+plot(ROCRperf, colorize = TRUE, print.cutoffs.at=seq(0,1,0.05), text.adj=c(-0.2,1.7))
 
 ###
 # Predict Hypo or Hyperglycemia using multinomial logistic regression

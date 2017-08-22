@@ -1,4 +1,4 @@
-# Capstone Project Diabetes data
+# Capstone Project - Machine learning
 
 ### Install required packages and load the libraries
 
