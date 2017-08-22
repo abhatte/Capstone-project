@@ -1,6 +1,6 @@
 # Install required packages and load the libraries
 #install.packages("caTools")
-install.packages("ROCR")
+#install.packages("ROCR")
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -127,15 +127,10 @@ clean_df$bin_num <- as.numeric(clean_df$bin_num)
 # it’s distribution is observed by plotting the histogram.
 # Fig.1
 
-qplot(clean_df$bg_conc,
-      geom="histogram",
-      binwidth = 5,  
-      main = "Distribution of Blood glucose measurements
-      Figure 1", 
-      xlab = "Blood Glucose, mg/dl",  
-      fill=I("black"), 
-      col=I("red"), 
-      alpha=I(0.2))
+ggplot(clean_df, aes(bg_conc)) +
+  geom_histogram(binwidth = 5, fill = "black", col = "red", alpha = 0.2) +
+  labs(x = "Code", y = "BG concentration, mg/dl") +
+  ggtitle("Distribution of Blood glucose measurements", subtitle = "Figure 1")
 
 # High peak at 10 - 20 mg/dl BG 
 # Now that we have determined the distribution of BG concentration, the focus of the further 
@@ -148,18 +143,20 @@ qplot(clean_df$bg_conc,
 
 
 ## 1. Code vs Blood Glucose concentration
-# Fig.2
-ggplot(clean_df, aes(factor(code), bg_conc)) +
-  geom_boxplot() +
-  labs(x = "Code", y = "BG concentration (mg/dl)") +
-  ggtitle("Relation between Code and Blood Glucose concentration", subtitle = "Figure 2")
 
 # BG values from code 48 - 64 show most hyperglycemic symptoms
 ggplot(clean_df, aes(factor(code), bg_conc, col = symptom)) +
   geom_point() +
+  geom_jitter() +
   labs(x = "Code", y = "Blood glucose value mg/dl") +
-  ggtitle("Relation between Code and Blood Glucose concentration", subtitle = "Figure 3")
+  ggtitle("Distribution of BG measurements based on Code and BG concentration", 
+          subtitle = "Figure 2")
 
+# Fig.3
+ggplot(clean_df, aes(factor(code), bg_conc)) +
+  geom_boxplot() +
+  labs(x = "Code", y = "BG concentration (mg/dl)") +
+  ggtitle("Relation between Code and Blood Glucose concentration", subtitle = "Figure 3")
 
 summary(clean_df$bg_conc)
 
@@ -192,8 +189,7 @@ code_df2 <- clean_df[clean_df$code %in% c2,]
 ggplot(code_df2, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
-  ggtitle("Relation between Meal and Blood Glucose concentration", subtitle = "Figure 
-          6")
+  ggtitle("Relation between Meal and Blood Glucose concentration", subtitle = "Figure 6")
 
 summary(code_df2$bg_conc)
 
@@ -219,14 +215,14 @@ ggplot(code_df3, aes(factor(code), bg_conc)) +
 
 summary(code_df3$bg_conc)
 
-# To see the comparison between these 3 types of activities, let's plot a box plot
+# To see the comparison between types of activities, let's plot a box plot
 # Fig.9
 ggplot(clean_df, aes(factor(activity), bg_conc, group=activity, col=activity)) +
   geom_point() +
   geom_boxplot() +
   labs(x = "Type of activity", y = "Blood glucose concentration, mg/dl") +
   ggtitle("Comparison between activity and BG concentration", subtitle = "Figure 9")
-# From fig.14, we can see that the blood glucose level decreases just after taking the isulin
+# From fig.9, we can see that the blood glucose level decreases just after taking the isulin
 # dose. It even drops down further after the exercise. However, the BG notably increases 
 # after a meal with a median of around 150 mg/dl
 
@@ -243,44 +239,34 @@ ggplot(clean_df, aes(factor(time_bin))) +
  geom_histogram(stat = "count", fill= "black", col= "red", alpha= 0.5) +
  labs(x = "Hours") +
  ggtitle("Distribition of BG measurements across time", subtitle = "Figure 10")
-
-  
-# Relationship between time interval and BG concentration box plot.
-# Fig.11
-ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
-  geom_boxplot() +
-  labs(x = "Hours", y = "Blood glucose concentration") +
-  ggtitle("Relation between time and BG concentration", subtitle = "Figure 
-          11")
-
-
 # minimum number of measurements taken from 00 - 04 in the night. 
 #The maximum number of BG concentration are taken during the day time.
-# Fig.12
-ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
-  geom_point(alpha = 0.1) +
-  scale_shape(1, solid = FALSE) +
-  geom_jitter(width = 0.1) +
-  geom_boxplot(alpha = 0.2) +
-  labs(x = "Hours", y = "Blood glucose value mg/dl") +
-  ggtitle("Distribution of blood glucose measurements over 24 hours", subtitle = "Figure 12")
-
-
+ 
 # see the distribution of Hypoglycemia, Normal BG concentration and Hyperglycemia.
 # Each point here represents number of Blood glucose measurements by the patients in 24 hours
 # for several weeks or months.
-# Fig.13
+# Fig.11
 
 ggplot(clean_df, aes(factor(time_bin), bg_conc, col = symptom)) +
   geom_point() +
   geom_jitter() +
   labs(x = "Hours", y = "Blood glucose value mg/dl") +
-  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 13")
+  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 11")
+
 # We do not see any precise time at which the patient was particulary showing Hypoglycemic or
-# Hyperglycemic symptoms. As it is distributed across 24 hours. However we can say that
-# there are comparatively less measurements showing these symptoms from 00 - 04 in the morning
+# Hyperglycemic symptoms, as the symptoms are distributed across 24 hours. However we can 
+# say that there are comparatively less measurements showing these symptoms from 00 - 04 in 
+# the morning
 # This could be due to the fact that there were less number of measurements taken at these
 # time intervals.
+
+# Association between time interval and BG concentration box plot.
+# Fig.12
+ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
+  geom_boxplot() +
+  labs(x = "Hours", y = "Blood glucose concentration") +
+  ggtitle("Association between time and BG concentration", subtitle = "Figure 12")
+
 
 # working plot Add facet layer
 # Fig.14
@@ -377,7 +363,7 @@ predDat1 <- with(binom.df,
 cbind(predDat1, predict(symp.mod1, type = "response",
                        se.fit = TRUE, interval="confidence",
                        newdata = predDat1))
-# This models predicts the probability of a patient number 45 having hyperglycemic symptoms
+# This model predicts the probability of a patient number 45 having hyperglycemic symptoms
 # over a time of 24 hours.
 
 
