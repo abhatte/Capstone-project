@@ -32,60 +32,47 @@ The dataset consists of 70 .tsv files and a data code and a domain description f
 Each of which represent the data for a single DM patient.
 Each file contains 4 attributes: Date, Time, Code and Value.
 
-### Date
+**Date**
+
 The dataset covers several weeks' to months' worth of outpatient care on 70 patients.
 
 The date is in MM-DD-YYYY format.
 
-### Time
+**Time**
+
 Diabetes patient records were obtained from two sources: an automatic electronic recording device and paper records. The automatic device had an internal clock to timestamp events, whereas the paper records only provided "logical time" slots (breakfast, lunch, dinner, bedtime). For paper records, fixed times were assigned to breakfast (08:00), lunch (12:00), dinner (18:00), and bedtime (22:00).
 
 The time is in HH:MM format.
 
-### Code
+**Code**
+
 The Code field is deciphered as follows:
 
-33 = Regular insulin dose
+Code      |  explanation
+----------| ------------
+33        | Regular insulin dose
+34        | NPH insulin dose
+35        | UltraLente insulin dose
+48        |Unspecified blood glucose measurement
+57        |Unspecified blood glucose measurement
+58        |Pre-breakfast blood glucose measurement
+59        |Post-breakfast blood glucose measurement
+60        |Pre-lunch blood glucose measurement
+61        |Post-lunch blood glucose measurement
+62        |Pre-supper blood glucose measurement
+63        |Post-supper blood glucose measurement
+64        |Pre-snack blood glucose measurement
+65        |Hypoglycemic symptoms
+66        |Typical meal ingestion
+67        |More-than-usual meal ingestion
+68        |Less-than-usual meal ingestion
+69        |Typical exercise activity
+70        |More-than-usual exercise activity
+71        |Less-than-usual exercise activity
+72        |Unspecified special event
 
-34 = NPH insulin dose
+**Value**
 
-35 = UltraLente insulin dose
-
-48 = Unspecified blood glucose measurement
-
-57 = Unspecified blood glucose measurement
-
-58 = Pre-breakfast blood glucose measurement
-
-59 = Post-breakfast blood glucose measurement
-
-60 = Pre-lunch blood glucose measurement
-
-61 = Post-lunch blood glucose measurement
-
-62 = Pre-supper blood glucose measurement
-
-63 = Post-supper blood glucose measurement
-
-64 = Pre-snack blood glucose measurement
-
-65 = Hypoglycemic symptoms
-
-66 = Typical meal ingestion
-
-67 = More-than-usual meal ingestion
-
-68 = Less-than-usual meal ingestion
-
-69 = Typical exercise activity
-
-70 = More-than-usual exercise activity
-
-71 = Less-than-usual exercise activity
-
-72 = Unspecified special event
-
-### Value
 This attribute represents a blood glucose (BG) concentration at a particular time after a particular activity (see Code).
 
 BG concentration vary even in individuals with normal pancreatic hormonal function. 
@@ -111,35 +98,14 @@ And **Hypoglycemia** (BG < 80) may have symptoms such as headache, abdominal pai
 
 
 
-### patient_num
+**patient_num**
+
 This column has been added, to represents the patient number (1-70)
 
-Below is the overview (head) of the combined dataset
+This is how the data frame looks like
 
-```{r, include=FALSE}
-library(readr)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-{master <- data.frame()
-for(i in 1:70) {
-  num = paste("", i, sep = "")
-  if (i < 10) num = paste("0", i, sep = "")
-  fname = paste("~/R Projects/diabetes-dataset/Diabetes-Data/data-", num, sep = "")
-  temp <- read_delim(fname, col_names = c("date", "time", "code", "bg_conc"), 
-   col_types = cols(
-    date = col_date(format = "%m-%d-%Y"),
-    time = col_time(format = "%R"),
-    code = col_integer(),
-    bg_conc = col_character()
-  ), "\t",
-    escape_double = FALSE, trim_ws = TRUE);
-  temp <- mutate(temp, patient_num = i)
-  master <- rbind(master, temp);
-}}
-```
 ```{r, echo=FALSE}
-head(master)
+head(df)
 ```
 
 ## Data limitations
@@ -156,291 +122,296 @@ The diabetes data set from UCI machine learning repository is relatively compreh
 However, since there are 70 different .tsv files for individual patients, they need to be merged in a single data frame. 
 
 Here are the data wrangling steps for diabetes data set
-
-1. Load the required libraries
-
-2. Create "master" data frame 
-   + Add variable patient_num to represent file number / patient number (01:70)
-   + read all 70 files and add column names ("date", "time", "code", "bg_conc")
-   + convert observations to a desirable format
-   + bind observations from all 70 files to create master data frame
    
-```{r, include=FALSE}
+**Packages required**
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 library(readr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-{master <- data.frame()
+library(caTools)
+library(ROCR)
+library(nnet)
+```
+
+**Load the data sets**
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# create an empty data frame
+df <- data.frame()
+# for loop for data files 1:70
 for(i in 1:70) {
   num = paste("", i, sep = "")
+# if i < 10, paste 0 followed by the file name, e.g 01, 02, etc.
   if (i < 10) num = paste("0", i, sep = "")
   fname = paste("~/R Projects/diabetes-dataset/Diabetes-Data/data-", num, sep = "")
+# creat vector to read files and add column names  
   temp <- read_delim(fname, col_names = c("date", "time", "code", "bg_conc"), 
    col_types = cols(
     date = col_date(format = "%m-%d-%Y"),
+# %R = Equivalent to %H:%M.    
     time = col_time(format = "%R"),
+# original string converted to integer
     code = col_integer(),
     bg_conc = col_character()
   ), "\t",
     escape_double = FALSE, trim_ws = TRUE);
+# add patient_num column to represent each patients records (1:70)
   temp <- mutate(temp, patient_num = i)
-  master <- rbind(master, temp);
-}}
+# bind data files (1:70) & create df file
+  df <- rbind(df, temp);
+}
 ```
 
-3. create clean_df to clean the data
 
-4. remove "000" & "3A" from bg_conc as they are illogical values
+* Create clean_df to clean the data
 
-5. clean_df contains code "4", "36, & "56", but since there is no entry of such codes in the data description, these values are removed as well
+* Remove "000" & "3A" from bg_conc as they are illogical values
 
-```{r, echo=TRUE}
-library(tidyr)
-clean_df <- subset(master, bg_conc != "000" & bg_conc != "3A")
+* Clean_df contains code "4", "36, & "56", but since there is no entry of such codes in the data description, these values are removed as well.
+
+* 29 NA's in date and 8 NA's in bg_conc are removed
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+clean_df <- subset(df, bg_conc != "000" & bg_conc != "3A")
 clean_df <- subset(clean_df, code != "4" & code != "36" & code != "56")
-```
-
-6. For further EDA, convert clean_df$bg_conc from character to numeric
-
-```{r, echo=TRUE}
 clean_df$bg_conc <- as.numeric(clean_df$bg_conc)
-```
-
-7. remove NAs from above
-
-```{r, echo=TRUE}
 clean_df <- na.omit(clean_df)
 ```
 
-8. Two hour time bins were created to explore how time attribute affects the BG concentration
-
-```{r, echo=TRUE}
-library(dplyr)
-clean_df <- clean_df %>%
-  mutate(time_grp = gsub("^00:[0-9][0-9]:00|^01:[0-9][0-9]:00", "00-02", x = time))%>%
-  mutate(time_grp = gsub("^02:[0-9][0-9]:00|^03:[0-9][0-9]:00", "02-04", x = time_grp))%>%
-  mutate(time_grp = gsub("^04:[0-9][0-9]:00|^05:[0-9][0-9]:00", "04-06", x = time_grp))%>%   
-  mutate(time_grp = gsub("^06:[0-9][0-9]:00|^07:[0-9][0-9]:00", "06-08", x = time_grp))%>%
-  mutate(time_grp = gsub("^08:[0-9][0-9]:00|^09:[0-9][0-9]:00", "08-10", x = time_grp))%>%
-  mutate(time_grp = gsub("^10:[0-9][0-9]:00|^11:[0-9][0-9]:00", "10-12", x = time_grp))%>%
-  mutate(time_grp = gsub("^12:[0-9][0-9]:00|^13:[0-9][0-9]:00", "12-14", x = time_grp))%>%
-  mutate(time_grp = gsub("^14:[0-9][0-9]:00|^15:[0-9][0-9]:00", "14-16", x = time_grp))%>%    
-  mutate(time_grp = gsub("^16:[0-9][0-9]:00|^17:[0-9][0-9]:00", "16-18", x = time_grp))%>%
-  mutate(time_grp = gsub("^18:[0-9][0-9]:00|^19:[0-9][0-9]:00", "18-20", x = time_grp))%>%
-  mutate(time_grp = gsub("^20:[0-9][0-9]:00|^21:[0-9][0-9]:00", "20-22", x = time_grp))%>%
-  mutate(time_grp = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22-24", x = time_grp))
-```
-
-From BG concentration measurements, we can derive if the patient is Hypoglycemic, Hyperglycemic or has a blood glucose in average range. The average BG for a diebetic patient is, 150 mg/dl. 
-
-9. But as we have already discussed that it is desirable to keep 90% of all BG measurements < 200 mg/dl. 
-Therefore, we will create groups
-
-**Hypoglycemia**: BG < 80 mg/dl
-
-**Average**: BG < 200 mg/dl
-
-**Hyperglycemia**: BG > 200 mg/dl
+* Match the pattern with regex from time column and create 2 hours time bins
 
 ```{r, echo=TRUE}
 clean_df <- clean_df %>%
-  mutate(bg_symp = gsub("^([0-9]|[0-7][0-9]|80)$", 
-                        "Hypoglycemia", x = bg_conc))%>%
-  mutate(bg_symp = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", "Average", x = bg_symp))%>%
-  mutate(bg_symp = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$", 
-                        "Hyperglycemia", x = bg_symp))%>%
-  mutate(bg_symp = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", "Hypoglycemia", x = bg_symp))
+  mutate(time_bin = gsub("^00:[0-9][0-9]:00|^01:[0-9][0-9]:00", "00-02", x = time))%>%
+  mutate(time_bin = gsub("^02:[0-9][0-9]:00|^03:[0-9][0-9]:00", "02-04", x = time_bin))%>%
+  mutate(time_bin = gsub("^04:[0-9][0-9]:00|^05:[0-9][0-9]:00", "04-06", x = time_bin))%>%   
+  mutate(time_bin = gsub("^06:[0-9][0-9]:00|^07:[0-9][0-9]:00", "06-08", x = time_bin))%>%
+  mutate(time_bin = gsub("^08:[0-9][0-9]:00|^09:[0-9][0-9]:00", "08-10", x = time_bin))%>%
+  mutate(time_bin = gsub("^10:[0-9][0-9]:00|^11:[0-9][0-9]:00", "10-12", x = time_bin))%>%
+  mutate(time_bin = gsub("^12:[0-9][0-9]:00|^13:[0-9][0-9]:00", "12-14", x = time_bin))%>%
+  mutate(time_bin = gsub("^14:[0-9][0-9]:00|^15:[0-9][0-9]:00", "14-16", x = time_bin))%>%    
+  mutate(time_bin = gsub("^16:[0-9][0-9]:00|^17:[0-9][0-9]:00", "16-18", x = time_bin))%>%
+  mutate(time_bin = gsub("^18:[0-9][0-9]:00|^19:[0-9][0-9]:00", "18-20", x = time_bin))%>%     
+  mutate(time_bin = gsub("^20:[0-9][0-9]:00|^21:[0-9][0-9]:00", "20-22", x = time_bin))%>%
+  mutate(time_bin = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22-24", x = time_bin))
 ```
 
-```{r, echo=FALSE}
-summary(clean_df)
+* From BG concentration measurements, we can derive if the patient is Hypoglycemic,  Hyperglycemic or has a blood glucose in Normal range. 
+
+To simplify and study the effects of time and activity against the BG symptoms; 3 bins are created
+
+```{r, echo=TRUE}
+clean_df <- clean_df %>%
+  mutate(symptom = gsub("^([0-9]|[0-7][0-9])$", "Hypoglycemia", x = bg_conc))%>%
+  mutate(symptom = gsub("^(8[0-9]|9[0-9]|1[0-9][0-9])$", "Normal", x = symptom))%>%
+  mutate(symptom = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$", 
+                        "Hyperglycemia", x = symptom))%>%
+  mutate(symptom = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", "Hypoglycemia", x = symptom))
 ```
 
-## Exploratory Data analysis
-*****
-The purpose of the initial exploration was to gauge the relationship between the BG concentration and the associated that determines the increase or decrease in BG concentration.
+* Let's add a new column "activity" which represent a type of activity patient has done just before or after measuring the BG
 
-Since bg_conc is the only numeric variable in the data set; it’s distribution was checked by plotting the histogram plot.
+code    |   type of activity
+--------| -------------------
+33 - 35 |   insulin dose
+58 - 64 |   meal (before - after)
+69 - 71 |   exercise
 
-```{r, echo=FALSE}
-library(ggplot2)
-qplot(clean_df$bg_conc,
-      geom="histogram",
-      binwidth = 5,  
-      main = "Histogram for Blood Glucose", 
-      xlab = "Blood Glucose",  
-      fill=I("black"), 
-      col=I("red"), 
-      alpha=I(0.2))
+```{r, echo=TRUE}
+clean_df <- clean_df %>%
+  mutate(activity = gsub("^(3[3-5])$", "insulin", x = code)) %>%
+  mutate(activity = gsub("^(5[8-9]|6[0-4]|66|67|68)$", "meal", x = activity)) %>%
+  mutate(activity = gsub("^(6[9]|7[0-1])$", "exercise", x = activity)) %>%
+  mutate(activity = gsub("^(48|57|72)$", "unspecified", x = activity)) %>%
+  mutate(activity = gsub("^(65)$", "hypo-measurement", x = activity))
 ```
 
-From Histogram for Blood Glucose we can see that majority of readings for BG concentration are found to be Hypoglycaemic.
+* For predictive analysis add one more column similar to the time_bin. 
 
-Now that we have determined the distribution of BG concentration, the focus of the further data visualisation and exploration will be to deep dive into other variables and determine how they interact with one another.
+This represents time groups in a numeric format e.g. 00-02 time_bin = 0 bin_num, etc.
+
+```{r, echo=TRUE}
+clean_df <- clean_df %>%
+  mutate(bin_num = gsub("^00:[0-9][0-9]:00|^01:[0-9][0-9]:00", "0", x = time))%>%
+  mutate(bin_num = gsub("^02:[0-9][0-9]:00|^03:[0-9][0-9]:00", "2", x = bin_num))%>%
+  mutate(bin_num = gsub("^04:[0-9][0-9]:00|^05:[0-9][0-9]:00", "4", x = bin_num))%>%   
+  mutate(bin_num = gsub("^06:[0-9][0-9]:00|^07:[0-9][0-9]:00", "6", x = bin_num))%>%
+  mutate(bin_num = gsub("^08:[0-9][0-9]:00|^09:[0-9][0-9]:00", "8", x = bin_num))%>%
+  mutate(bin_num = gsub("^10:[0-9][0-9]:00|^11:[0-9][0-9]:00", "10", x = bin_num))%>%
+  mutate(bin_num = gsub("^12:[0-9][0-9]:00|^13:[0-9][0-9]:00", "12", x = bin_num))%>%
+  mutate(bin_num = gsub("^14:[0-9][0-9]:00|^15:[0-9][0-9]:00", "14", x = bin_num))%>%    
+  mutate(bin_num = gsub("^16:[0-9][0-9]:00|^17:[0-9][0-9]:00", "16", x = bin_num))%>%
+  mutate(bin_num = gsub("^18:[0-9][0-9]:00|^19:[0-9][0-9]:00", "18", x = bin_num))%>%     
+  mutate(bin_num = gsub("^20:[0-9][0-9]:00|^21:[0-9][0-9]:00", "20", x = bin_num))%>%
+  mutate(bin_num = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22", x = bin_num))
+```
+
+
+# Exploratory Data analysis
+****
 
 The following variables will be investigated in this section:
 
-* _Code vs Blood Glucose concentration_
+  * Code vs Blood Glucose concentration
+  
+  * Time vs Blood Glucose concentration
+  
+Since bg_conc is the only numeric variable in the data set; it’s distribution is observed by plotting the histogram.
 
-+ _Time vs Blood Glucose concentration_ 
+```{r, echo=TRUE}
+ggplot(clean_df, aes(bg_conc)) +
+  geom_histogram(binwidth = 5, fill = "black", col = "red", alpha = 0.2) +
+  labs(x = "Code", y = "BG concentration, mg/dl") +
+  ggtitle("Distribution of Blood glucose measurements", subtitle = "Figure 1")
+```
 
-_**Code vs Blood Glucose concentration**_
+We can see the high peak at 10 - 20 mg/dl BG 
 
-```{r, echo=FALSE}
-library(ggplot2)
+Now that we have determined the distribution of BG concentration, the focus of the further  data visualisation and exploration will be to deep dive into other variables  and determine how they interact with one another.
+
+**Code vs Blood Glucose concentration**
+
+****
+
+```{r, echo=TRUE}
+ggplot(clean_df, aes(factor(code), bg_conc, col = symptom)) +
+  geom_point() +
+  geom_jitter() +
+  labs(x = "Code", y = "Blood glucose value mg/dl") +
+  ggtitle("Distribution of BG measurements based on Code and BG concentration", 
+          subtitle = "Figure 2")
+
 ggplot(clean_df, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
-  ggtitle("Relation between Code & Blood Glucose concentration", subtitle = "Figure 2")
+  ggtitle("Relation between Code and Blood Glucose concentration", subtitle = "Figure 3")
 ```
 
-In **Figure 2**, note that there are 3 clear groups of codes.
 
-To gain a better perspective at this, let’s plot the graph of BG concentration vs code by grouping the codes into 3 sub categories.
+To gain a better perspective at this, let’s plot the graph of BG concentration vs code by  grouping the codes into 3 sub categories.
 
-**1. group 1: code 33 - 35**
-
-This group represent the codes for type of insulin dose
-
-```{r, echo=FALSE}
-library(ggplot2)
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 c1 <- c(33:35)
-clean_df1 <- clean_df[clean_df$code %in% c1,]
-ggplot(clean_df1, aes(factor(code), bg_conc)) +
+code_df1 <- clean_df[clean_df$code %in% c1,]
+ggplot(code_df1, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
-  ggtitle("Relation between Insulin dose & Blood Glucose concentration", subtitle = "Figure 3")
+  ggtitle("Relation between Insulin dose and Blood Glucose concentration", subtitle = 
+            "Figure 4")
+
+ggplot(code_df1, aes(factor(code))) +
+  geom_histogram(stat = "count", fill= "black", col= "red", alpha= 0.2) +
+  labs(x = "Code", y = "BG concentration (mg/dl)") +
+  ggtitle("Distribution of code (Insulin)", subtitle = "Figure 5")
 ```
 
-```{r, echo=FALSE}
-summary(clean_df1$bg_conc)
-```
-
-From **Figure 3**, we can see that the BG concentation of a patient drops down after taking an exogenous insuline dose.
-
-   Code  |     Type        | Onset of effect | Time of peak action | Effective duration
-   ----- | --------------- |---------------- |-------------------- |-------------------
-    33   | Regular Insulin |  15-45 minutes  |     1-3 hours       |    4-6 hours
-    34   | NPH Insulin     |  1-3 hours      |     4-6 hours       |    10-14 hours
-    35   | Ultralente      |  2-5 hours      |  not much of a peak |    24-30 hours
--------
-
-**2. group 2: code 48, 57 - 64**
-
-This group represent the codes which are related to meal (pre or post) of a patient.
-
-```{r, echo=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 c2 <- c(48, 57:64)
-clean_df2 <- clean_df[clean_df$code %in% c2,]
-ggplot(clean_df2, aes(factor(code), bg_conc)) +
+code_df2 <- clean_df[clean_df$code %in% c2,]
+ggplot(code_df2, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
-  ggtitle("Relation between meal & Blood Glucose concentration", subtitle = "Figure 4")
+  ggtitle("Relation between Meal and Blood Glucose concentration", subtitle = "Figure 6")
+
+ggplot(code_df2, aes(factor(code))) +
+  geom_histogram(fill= "black", col= "red", alpha= 0.2, stat = "count") +
+  labs(x = "Codes representing Meal", y = "BG concentration (mg/dl)") +
+  ggtitle("Distribution of measurements based on Pre/ Post Meal", subtitle = "Figure 7")
 ```
 
-```{r, echo=FALSE}
-summary(clean_df2$bg_conc)
-```
-
-In **Figure 4**, the type of insuline injected will determine the level of BG concentration across various patients.
-
-Note that, in the box plot above, codes 58, 60, 62, 64 represent a pre meal BG concentration and codes 59, 61, 63 represent a post meal BG concentration.
-
--------
-
-**3. group 3: code 65 - 72**
-
-The codes in this group represent any unusual activities related to meal or exercise and the Hypoglycaemic symptoms.
-
-```{r, echo=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 c3 <- c(65:72)
-clean_df3 <- clean_df[clean_df$code %in% c3,]
-ggplot(clean_df3, aes(factor(code), bg_conc)) +
+code_df3 <- clean_df[clean_df$code %in% c3,]
+ggplot(code_df3, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
-  ggtitle("Relation between exercise & Blood Glucose concentration", subtitle = "Figure 5")
+  ggtitle("Relation between exercise and Blood Glucose concentration", subtitle = "Figure 8")
 ```
 
-```{r, echo=FALSE}
-summary(clean_df3$bg_conc)
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(clean_df, aes(factor(activity), bg_conc, group=activity, col=activity)) +
+  geom_point() +
+  geom_boxplot() +
+  labs(x = "Type of activity", y = "Blood glucose concentration, mg/dl") +
+  ggtitle("Comparison between activity and BG concentration", subtitle = "Figure 9")
 ```
 
-In **figure 5**, we see that all the BG concentration values are 0 mg/ml. Since code 65 represents the Hypoglycemic symptoms, it is normal to have BG concentration value around 0 mg/dl. But, for the remaining code, it is not logical. Hence we assume that these values were supposed to be measured but they are just the place holder for now.
+### Conclusion 1: Exploratory Data Analysis
 
----------
+**Code vs Blood Glucose concentration**
 
-_**Time vs Blood Glucose concentration **_
-Since time is a continuous variable, it will be difficult to explore the data when time is plotted on x- axis.
-This is why the time intervals of 2 hours (time_grp) were created (See data wrangling). The distribution of BG measurements across various time intervals was explored initially using a simple bar plot.
+****
 
+* From Figure 1, we can clearly see a pattern between BG concentration and the type of activity. The patients suffer from Hyperglycemia before or after a meal. 
+
+* Also there are three groups which show the similar patterns. To explore more, the three individual plots have been created. Statistical summary of which is as follows
+
+* Figure 4, Relation between Insulin dose and Blood Glucose concentration
 ```{r, echo=FALSE}
-library(ggplot2)
-ggplot(clean_df, aes(time_grp)) +
- geom_bar() +
+summary(code_df1$bg_conc)
+```
+
+* Figure 6, Relation between Meal and Blood Glucose concentration
+```{r, echo=FALSE}
+summary(code_df2$bg_conc)
+```
+
+* Figure 8, Relation between exercise and Blood Glucose concentration
+```{r, echo=FALSE}
+summary(code_df3$bg_conc)
+```
+
+* Note that, patients take Regular insulin dose more often than NPH and Ultralente insulin dose and rarely measure BG after a meal (Figure 5 & 7)
+
+* Figure 9 nicely compares between the types of activities and BG concentration. Blood glucose level decreases just after taking the isulin dose. It even drops down further down after the exercise. However, the BG notably increases after a meal with a median of around 150 mg/dl
+
+
+**Time vs Blood Glucose concentration**
+
+****
+Since time is a continuous variable, it will be difficult to explore the data when time is plotted on x- axis. Which is why the time intervals of 2 hours (time_bin) were created
+
+We want to explore the distribution of Hypoglycemia, Normal BG concentration and Hyperglycemia based on time intervals.
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(clean_df, aes(factor(time_bin))) +
+ geom_histogram(stat = "count", fill= "black", col= "red", alpha= 0.5) +
  labs(x = "Hours") +
- ggtitle("Histogram for time groups", subtitle = "Figure 6")
+ ggtitle("Distribition of BG measurements across time", subtitle = "Figure 10")
 ```
 
-From **Figure 6**, we can say that most of the BG concentration was measured from 6 - 10, 12 - 14 & from 16 -24.
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(clean_df, aes(factor(time_bin), bg_conc, col = symptom)) +
+  geom_point() +
+  geom_jitter() +
+  labs(x = "Hours", y = "Blood glucose value mg/dl") +
+  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 11")
+```
 
---------
 
-Now let’s get a clearer view of the relationship between time interval and BG concentration by plotting a box plot.
-
-```{r, echo=FALSE}
-ggplot(clean_df, aes(factor(time_grp), bg_conc)) +
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
   geom_boxplot() +
   labs(x = "Hours", y = "Blood glucose concentration") +
-  ggtitle("Relation between time interval & Blood Glucose concentration", subtitle = "Figure 7")
+  ggtitle("Association between time and BG concentration", subtitle = "Figure 12")
 ```
 
-From **Figure 7**, we can say that the BG concentration remains lower from 4 - 10 am assuming that these are pre breakfast measurements. 
-Similarly, the hypoglycaemia is observed from 16 - 22 assuming they are pre meal measurements.
+### Conclusion 2: Exploratory Data Analysis
 
-However, BG concentration rises after a meal i.e from time slot 10 - 16 & 22 - 24.
+**Time vs Blood Glucose concentration**
 
---------
+****
 
-Now, let's see the distribution of BG measurements in individual time slots
+Each point here represents number of Blood glucose measurements by the patients in 24 hours for several weeks or months.
 
-```{r, echo=FALSE}
-ggplot(clean_df, aes(factor(time_grp), bg_conc)) +
-  geom_point(alpha = 0.1) +
-  scale_shape(1, solid = FALSE) +
-  geom_jitter(width = 0.1) +
-  geom_boxplot(alpha = 0.2) +
-  labs(x = "Hours", y = "Blood glucose value") +
-  ggtitle("Distribution of blood glucose measurements over 24 hours", subtitle = "Figure 8")
-```
+We do not see any precise time at which the patient was particulary showing Hypoglycemic or
+Hyperglycemic symptoms, as the symptoms are distributed across 24 hours. However we can say that there are comparatively less measurements showing these symptoms from 00 - 04 in the morning.
 
-**Figure 8**, clearly shows that there were minimum number of measurements taken from 00 - 04 in the night. The maximum number of BG concentration are taken during the day time.
+This could be due to the fact that there were less number of measurements taken at these time intervals.
 
---------
+Howerver, there is a notable drop in median of BG concentration from 4 - 10 and from 16 - 22.
 
-As discussed already, we have categorised BG concentration into 3 sub categories: Hypoglycemia, average BG concentration and Hyperglycemia.
+*****
 
-The distribution of these 3 categories is shown below in the Figure 9 by simply plotting the points on time slots. Each point here represents number of Blood glucose measurements by the patients in 24 hours for several weeks or months.
 
-```{r, echo=FALSE}
-ggplot(clean_df, aes(factor(time_grp), bg_conc, col = bg_symp)) +
-  geom_point() +
-  labs(x = "Hours", y = "Blood glucose concentration") +
-  ggtitle("Distribution of BG symptoms over 24 hours", subtitle = "Figure 9")
-```
-
-----------
-
-In **Figure 10**, lets see the boxplot of symptoms and BG concentration
-
-```{r, echo=FALSE}
-clean_df$bg_symp <- factor(clean_df$bg_symp, levels = c("Hypoglycemia", "Average",
-                                                          "Hyperglycemia"))
-ggplot(clean_df, aes(bg_symp, bg_conc, col = bg_symp)) +
-  geom_point() +
-  geom_boxplot(alpha = 0.4, width = 4.5) +
-  facet_grid(.~ (bg_symp)) +
-  labs(x = "Symptoms", y = "Blood glucose concentration, mg/dl") +
-  ggtitle("Distribution of BG symptoms", subtitle = "Figure 10")
-```
-
-----------
