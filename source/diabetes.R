@@ -400,6 +400,47 @@ table(train$sympcode, pred.train > 0.1)
 # specificity
 10069/(10069+7427) #0.57
 
+set.seed(844)
+# split data into  70:30 ratio
+split <- sample.split(binom.df$sympcode, SplitRatio = 0.7)
+train <- subset(binom.df, split == TRUE)
+test <- subset(binom.df, split == FALSE)
+
+test$sympcode <- as.numeric(test$sympcode)
+test <- test[-test$sympcode]
+
+symp.mod2 <- glm(sympcode~code+bin_num, data = train, family = "binomial")
+summary(symp.mod2)
+# higher value in coefficients table are indicative of hyperglycemia
+pred.test <- predict(symp.mod2, type = "response", newdata = test)
+summary(pred.test)
+tapply(pred.test, test$sympcode, mean)
+# all true hyperglycemia = 17.3% predicted probability
+# all true not hyperglycemia = 12.8% predicted probability
+table(test$sympcode, pred.test > 0.1)
+# sensitivity
+(4268+1155)/8655 # 63%
+# specificity
+(4268+3231)/8655 # 87%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # # test.predict <- predict(symp.mod2, activity = "response", newdata = test)
@@ -434,6 +475,47 @@ print(cm)
 # misclassification by model
 (2106+3759+56+35+60+40)/(28847)
 # our model misclassifies a patient only 21% of the time
+
+
+
+
+#4.17pm
+mult.df <- clean_df
+# Relevel the column; where Normal = 1
+mult.df$out <- relevel(mult.df$sympcode, ref = "1")
+# Let's create a multinomial model to predict Normal BG, hypoglycemia & hyperglycemia
+# based on code
+mult.mod <- multinom(out~code+activity+bin_num, data = mult.df)
+summary(mult.mod)
+
+p <- predict(mult.mod, mult.df)
+cm <- table(p, mult.df$sympcode)
+print(cm)
+
+#correct classification
+(7248+15391+222)/(28847) # 79%
+# misclassification by model
+(2106+3759+56+35+60+40)/(28847) # 21%
+
+# simple table for baseline accuracy
+table(mult.df$sympcode)
+#  1     2     3 
+# 7450 17545  3852 
+
+# To predict if a patient is hypo or hyperglycemic
+17545/28847
+# so if we predict all patiets do not have hypo or hyperglycemia, still we'll be right 
+# 61% of the time
+#Hence the model having % accuracy less than 61%, won't be used
+#We have already created a model (mult.mod) that correctly classifies the data 79% of the time
+
+
+
+
+
+
+
+
 
 # # str(clean_df$sympcode)
 # # distances <- dist(clean_df$sympcode, method = "euclidean")

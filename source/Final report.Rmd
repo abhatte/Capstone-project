@@ -3,12 +3,14 @@ title: 'Outpatient Management Recommendation: Type 1 Diabetes'
 author: "Ashwini Bhatte"
 date: "22/08/2017"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
-#Introduction
-------
+# Introduction
+
+*****
+
 Insulin dependent diabetes mellitus (IDDM) also known as Type 1 diabetes is a chronic illness characterised by the body’s inability to produce insulin due to the autoimmune destruction of the beta cells in the pancreas.
 
 Patients with type 1 diabetes mellitus (DM) require lifelong insulin therapy. Most require 2 or more injections of insulin daily, with doses adjusted on the basis of self-monitoring of blood glucose levels. Long-term management requires a multidisciplinary approach that includes physicians, nurses, dieticians, and selected specialists.
@@ -27,8 +29,9 @@ But it is desirable to keep 90% of all BG measurements < 200 mg/dl.
 
 With appropriate glycemic control, the risk of both microvascular and neuropathic complications is decreased markedly. In addition to being a lifelong disease, the treatment of DM is multifaceted making it necessary to take many variables into account.
 
-#Domain knowledge
-------
+# Domain knowledge
+
+****
 
 Outpatient management of IDDM relies principally on three interventions: diet, exercise and exogenous insulin. Proper treatment requires careful consideration of all three interventions. 
 
@@ -80,8 +83,9 @@ Below 40 mg/dl, the patient's brain is inadequately supplied with glucose and th
 
 These include: lethargy, weakness, disorientation, seizures and passing out.
 
-#Objective
-------
+# Objective
+
+****
 
 The goal of this project is to, 
 
@@ -91,8 +95,9 @@ The goal of this project is to,
 
 Through finding a pattern in blood glucose levels and the type of activities preceding measurement, we can give recommendations to the patient.
 
-#Description of Dataset
---------
+# Description of Dataset
+
+****
 
 The diabetes dataset was obtained from UCI Machine Learning Repository, which was donated by Michael Kahn, MD, PhD, Washington University, St. Louis, MO
 
@@ -167,6 +172,7 @@ for(i in 1:70) {
   df <- rbind(df, temp);
 }
 ```
+
 * **Create clean_df to clean the data**
 
 * Remove "000" & "3A" from bg_conc as they are illogical values
@@ -251,7 +257,8 @@ clean_df <- clean_df %>%
 ```
 
 # Exploratory Data analysis
-------
+
+****
 
 The following variables will be investigated in this section:
 
@@ -273,7 +280,9 @@ We can see the high peak at 10 - 20 mg/dl BG
 Now that we have determined the distribution of BG concentration, the focus of the further  data visualisation and exploration will be to deep dive into other variables  and determine how they interact with one another.
 
 **Code vs Blood Glucose concentration**
------
+
+****
+
 ```{r, echo=TRUE}
 ggplot(clean_df, aes(factor(code), bg_conc, col = symptom)) +
   geom_point() +
@@ -340,7 +349,8 @@ ggplot(clean_df, aes(factor(activity), bg_conc, group=activity, col=activity)) +
 ### Conclusion 1: Exploratory Data Analysis
 
 **Code vs Blood Glucose concentration**
--------
+
+****
 
 * From Figure 1, we can clearly see a pattern between BG concentration and the type of activity. The patients suffer from Hyperglycemia before or after a meal. 
 
@@ -367,7 +377,8 @@ summary(code_df3$bg_conc)
 
 
 **Time vs Blood Glucose concentration**
-----
+
+****
 Since time is a continuous variable, it will be difficult to explore the data when time is plotted on x- axis. Which is why the time intervals of 2 hours (time_bin) were created
 
 We want to explore the distribution of Hypoglycemia, Normal BG concentration and Hyperglycemia based on time intervals.
@@ -398,7 +409,8 @@ ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
 ### Conclusion 2: Exploratory Data Analysis
 
 **Time vs Blood Glucose concentration**
-------
+
+****
 
 Each point here represents number of Blood glucose measurements by the patients in 24 hours for several weeks or months.
 
@@ -408,6 +420,10 @@ Hyperglycemic symptoms, as the symptoms are distributed across 24 hours. However
 This could be due to the fact that there were less number of measurements taken at these time intervals.
 
 Howerver, there is a notable drop in median of BG concentration from 4 - 10 and from 16 - 22.
+
+
+*******
+
 
 
 
