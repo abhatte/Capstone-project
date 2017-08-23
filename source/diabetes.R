@@ -281,15 +281,10 @@ ggplot(clean_df, aes(symptom, bg_conc, col = symptom)) +
 
 
 ## Machine learning
-
-
-# Now, let's create a binomial logistic regression model 
-# If a patient takes 33, what is the prob that he develops hyperglycemia?
-
-# # But before creating a model, create a identical df
-# clean_df <- clean_df
-# assign hyperglycemia = 1
+# Add a column and encode,
+# hyperglycemia = 1
 # Normal, Hypoglycemia = 0
+
 clean_df <- clean_df %>%
   mutate(sympcode = gsub("^([0-9]|[0-7][0-9]|80)$", 0, x = bg_conc))%>%
   mutate(sympcode = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", 0, x = sympcode))%>%
@@ -300,71 +295,11 @@ clean_df <- clean_df %>%
 str(clean_df)
 clean_df$sympcode <- as.factor(clean_df$sympcode)
 clean_df$bin_num <- as.numeric(clean_df$bin_num)
-#clean_df$bin_num <- as.factor(clean_df$bin_num)
-clean_df$sympcode <- as.factor(clean_df$sympcode)
 clean_df$activity <- as.factor(clean_df$activity)
 str(clean_df)
 
-str(clean_df)
-# Let's predict the probability of occurrence of hyperglycemia based on code and activity
 
-symp.mod <- glm(sympcode~code,
-               data=clean_df, family="binomial")
-
-coef(summary(symp.mod))
-# transform the coefficients to make them easier to interpret
-symp.mod.tab <- coef(summary(symp.mod))
-symp.mod.tab[, "Estimate"] <- exp(coef(symp.mod))
-symp.mod.tab
-
-# what is the probability of a patient having hyperglycemic symptoms before or after a meal?
-
-
-predDat <- with(clean_df,
-                expand.grid(code = c("58", "59", "60", "61", "62", "63", "64", "66", "67", 
-                                     "68", "48", "57")))
-
-cbind(predDat, predict(symp.mod, type = "response",
-                       se.fit = TRUE, interval="confidence",
-                       newdata = predDat))
-
-
-# This tells us the probabilty of developing hyperglycemic symptoms before or after a meal
-# 58 = 34%
-# 59 = 45%
-# 60 = 20%
-# 61 = 61%
-# 62 = 26%
-# 63 = 48%
-# 64 = 27%
-# 66 = 86%
-# 68 = 86%
-# 48 = 30%
-# 57 = 33%
-
-
-# predicting the probability of a patient being hyperglycemic at a particular time
-# based on time and patient number
-symp.mod1 <- glm(sympcode~bin_num+patient_num+activity,
-                data=clean_df, family="binomial")
-
-coef(summary(symp.mod1))
-
-predDat1 <- with(clean_df,
-                expand.grid(patient_num = c(1, 45, 70), 
-                            activity = c("meal"),
-                            bin_num = c(10)))
-
-cbind(predDat1, predict(symp.mod1, type = "response",
-                       se.fit = TRUE, interval="confidence",
-                       newdata = predDat1))
-# This model predicts the probability of a patient number 1, 45, 70 having hyperglycemia
-# over a time of 24 hours.
-
-
-## Predicting Hyperglycemic symptoms bases on codes
-
-str(clean_df)
+# First, let's find the accuracy of baseline model
 table(clean_df$sympcode)
 # 24995 patients not hyperglycemic & 3851 are hyperglycemic
 # since not hyperglycemic are more common than hyperglycemic, we'll predict all patients are
@@ -372,17 +307,14 @@ table(clean_df$sympcode)
 24995/28847
 # Baseline model accuracy = 87%
 
-#####
-# initial visualization
-ggplot(clean_df, aes(code, bin_num, col = sympcode)) +
-  geom_point()
+# Now, let's create a binomial logistic regression model that Predicts Hyperglycemic symptoms 
+# based on codes
 
 set.seed(844)
 # split data into  70:30 ratio
 split <- sample.split(clean_df$sympcode, SplitRatio = 0.7)
 train <- subset(clean_df, split == TRUE)
 test <- subset(clean_df, split == FALSE)
-
 #create a model
 symp.logit <- glm(sympcode~code+bin_num, data = train, family = "binomial")
 summary(symp.logit) 
@@ -393,6 +325,7 @@ summary(symp.logit)
 
 pred.test <- predict(symp.logit, type = "response", newdata = test)
 summary(pred.test)
+
 # all true hyperglycemia cases we predicted probability of 0.3
 # all true not hyperglycemia cases we predicted probability of 0.1
 
@@ -459,6 +392,64 @@ as.numeric(performance(ROCRpred, "auc")@y.values) # 0.83
 # The codes representing meal activity suggest that the patient will be hyperglycemic
 
 
+# Binomial regression activity ~ bg_conc
+
+clean_df <- clean_df %>%
+  mutate(act.code = gsub("^(3[3-5])$", 0, x = code)) %>%  # insulin = 0
+  mutate(act.code = gsub("^(5[8-9]|6[0-4]|66|67|68)$", 1, x = act.code)) %>%   #meal = 1
+  mutate(act.code = gsub("^(6[9]|7[0-1])$", 0, x = act.code)) %>% #exercise = 0
+  mutate(act.code = gsub("^(48|57|72)$", 0, x = act.code)) %>% #unspecified = 0
+  mutate(act.code = gsub("^(65)$", 0, x = act.code)) #hypo-measurement = 0
+
+str(clean_df)
+clean_df$act.code <- as.factor(clean_df$act.code)
+# First, let's find the accuracy of baseline model
+table(clean_df$act.code)
+# 17842 patients have not had meal related activity & 11005 have
+# since patients who have not had meal are more common than patients who have, 
+# we'll predict all patients whi have not had meal related activity.
+17842/28847
+# Baseline model accuracy = 61%
+
+# Now, let's create a binomial logistic regression model that Predicts Hyperglycemic symptoms 
+# based on codes
+
+set.seed(844)
+# split data into  70:30 ratio
+act.split <- sample.split(clean_df$act.code, SplitRatio = 0.7)
+act.train <- subset(clean_df, split == TRUE)
+act.test <- subset(clean_df, split == FALSE)
+#create a model
+act.logit <- glm(act.code~bg_conc, data = act.train, family = "binomial")
+summary(act.logit) 
+
+
+pred.test1 <- predict(act.logit, type = "response", newdata = act.test)
+summary(pred.test1)
+
+# confusion matrix
+
+table(act.test$act.code, pred.test1 > 0.3)
+# accuracy of the model = (TP+TN)/(TP+TN+FP+FN)
+(4534+1155)/(4534+1155+2944+1) # 0.65
+
+table(act.test$act.code, pred.test1 > 0.5)
+# accuracy of the model = (TP+TN)/(TP+TN+FP+FN)
+(4679+2200)/(4679+2200+640+1136) # 0.79
+
+
+# ROC curve
+ROCRact.pred <- prediction(pred.test1, act.test$act.code)
+ROCRact.perf <- performance(ROCRact.pred, "tpr", "fpr")
+plot(ROCRact.perf, colorize = TRUE, print.cutoffs.at=seq(0,1,0.1), text.adj=c(-0.2,1.7))
+
+# calculate AUC
+as.numeric(performance(ROCRact.pred, "auc")@y.values) # 0.88
+
+# Calculate the F1 score/ harmonic mean = 2TP/(2TP+FP+FN)  (t = 0.5)
+(2*4679)/(2*4679+1136+640) # 0.84
+
+
 
 ####
 
@@ -473,33 +464,41 @@ clean_df <- clean_df %>%
   mutate(sympcode.mult = gsub("^([0-9]|[0-7][0-9]|80)$", 2, x = bg_conc))%>%
   mutate(sympcode.mult = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", 1, x = sympcode.mult))%>%
   mutate(sympcode.mult = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$",
-                         3, x = sympcode.mult)) %>%
+                              3, x = sympcode.mult)) %>%
   mutate(sympcode.mult = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", 2, x = sympcode.mult))
 
 clean_df$sympcode.mult <- as.factor(clean_df$sympcode.mult)
 
 # install.packages("nnet")
 # library(nnet)
-# # create a new df identical to clean_df for multinomial regression model
-# mult.df <- clean_df
+
+clean_df$sympcode.mult <- as.factor(clean_df$sympcode.mult)
+
 # Relevel the column; where Normal = 1
 clean_df$out <- relevel(clean_df$sympcode.mult, ref = "1")
+
+set.seed(844)
+mult.split <- sample.split(clean_df$sympcode.mult, SplitRatio = 0.7)
+mult.train <- subset(clean_df, split == TRUE)
+mult.test <- subset(clean_df, split == FALSE)
+
+
 # Let's create a multinomial model to predict Normal BG, hypoglycemia & hyperglycemia
 # based on code
-mult.mod <- multinom(out~code, data = clean_df)
+mult.mod <- multinom(out~code, data = mult.train)
 summary(mult.mod)
 
-p <- predict(mult.mod, clean_df)
+p <- predict(mult.mod, newdata = mult.test)
 # create confusion matrix
-cm <- table(p, clean_df$sympcode.mult)
+cm <- table(p, mult.test$sympcode.mult)
 print(cm)
 
 #correct classification
-(7332+15318+154)/(28847) # 79%
-# misclassification by model
-(2188+3693+6+5+112+39)/(28847) # 21%
+(2222+4555+35)/8665 # 0.78
 
-#We have created a model (mult.mod) that correctly classifies the data 79% of the time
+# misclassification by model = 22%
+
+#We have created a model (mult.mod) that correctly classifies the data 78% of the time
 
 # 2-tailed z test
 
@@ -508,25 +507,9 @@ p <- (1 - pnorm(abs(z), 0 , 1)) * 2
 p
 
 # 1 - p value = confidence interval
-# since code 33, 34, 35, 48, 57, 58, 59, 60, 61, 62, 63, 64 have p value almost 0
+# since code 33, 34, 48, 57, 58, 59, 60, 61, 62, 63, 64 have p value almost 0
 # hence higher confidence interval and therefore more significant in predicting hypoglycemia
 
 
 
-
-
-
-
-
-# # str(clean_df$sympcode)
-# # distances <- dist(clean_df$sympcode, method = "euclidean")
-# # cluster_symp <- hclust(distances, method = "ward")
-# # plot(cluster_symp)
-# # clusterGroups <- cutree(cluster_bg, k = 3)
-# # tapply(clean_df$sympcode, clusterGroups, mean)
-
-
-
-
-str(clean_df)
 
