@@ -3,13 +3,11 @@ title: 'Outpatient Management Recommendation: Type 1 Diabetes'
 author: "Ashwini Bhatte"
 date: "22/08/2017"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 # Introduction
-
-*****
 
 Insulin dependent diabetes mellitus (IDDM) also known as Type 1 diabetes is a chronic illness characterised by the body’s inability to produce insulin due to the autoimmune destruction of the beta cells in the pancreas.
 
@@ -29,9 +27,9 @@ But it is desirable to keep 90% of all BG measurements < 200 mg/dl.
 
 With appropriate glycemic control, the risk of both microvascular and neuropathic complications is decreased markedly. In addition to being a lifelong disease, the treatment of DM is multifaceted making it necessary to take many variables into account.
 
-# Domain knowledge
+*****
 
-****
+# Domain knowledge
 
 Outpatient management of IDDM relies principally on three interventions: diet, exercise and exogenous insulin. Proper treatment requires careful consideration of all three interventions. 
 
@@ -83,9 +81,9 @@ Below 40 mg/dl, the patient's brain is inadequately supplied with glucose and th
 
 These include: lethargy, weakness, disorientation, seizures and passing out.
 
-# Objective
-
 ****
+
+# Objective
 
 The goal of this project is to, 
 
@@ -93,13 +91,13 @@ The goal of this project is to,
 
 * Predict Hyperglycemia (high blood glucose) or Hypoglycemia (low blood glucose)  in patients.
 
-Through finding a pattern in blood glucose levels and the type of activities preceding measurement, we can give recommendations to the patient.
-
-# Description of Dataset
+Through finding a pattern in blood glucose levels and the type of activities before or after the BG measurement, we can give recommendations to the patient.
 
 ****
 
-The diabetes dataset was obtained from UCI Machine Learning Repository, which was donated by Michael Kahn, MD, PhD, Washington University, St. Louis, MO
+# Description of Dataset
+
+The diabetes dataset was obtained from [**UCI Machine Learning Repository**](https://archive.ics.uci.edu/ml/datasets/Diabetes), which was donated by Michael Kahn, MD, PhD, Washington University, St. Louis, MO
 
 The dataset consists og 70 .tsv files and a data code and a domain description file. Each file out of the 70 different files represent the data for a single DM patient. Each file contain 4 attributes: Date, Time, Code, Value.
 
@@ -131,10 +129,9 @@ Code      |  explanation
 71        |Less-than-usual exercise activity
 72        |Unspecified special event
 
-#Description, Analysis and Cleaning of Variables in the Dataset
---------
-**Packages required**
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
+****
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -142,11 +139,6 @@ library(ggplot2)
 library(caTools)
 library(ROCR)
 library(nnet)
-```
-
-**Load the data sets**
-
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
 # create an empty data frame
 df <- data.frame()
 # for loop for data files 1:70
@@ -171,26 +163,21 @@ for(i in 1:70) {
 # bind data files (1:70) & create df file
   df <- rbind(df, temp);
 }
-```
+#Create clean_df to clean the data**
 
-* **Create clean_df to clean the data**
+#Remove "000" & "3A" from bg_conc as they are illogical values
 
-* Remove "000" & "3A" from bg_conc as they are illogical values
+#Clean_df contains code "4", "36, & "56", but since there is no entry of such codes in the data description, these values are removed as well.
 
-* Clean_df contains code "4", "36, & "56", but since there is no entry of such codes in the data description, these values are removed as well.
+#29 NA's in date and 8 NA's in bg_conc are removed
 
-* 29 NA's in date and 8 NA's in bg_conc are removed
-
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
 clean_df <- subset(df, bg_conc != "000" & bg_conc != "3A")
 clean_df <- subset(clean_df, code != "4" & code != "36" & code != "56")
 clean_df$bg_conc <- as.numeric(clean_df$bg_conc)
 clean_df <- na.omit(clean_df)
-```
 
-* Match the pattern with regex from time column and create 2 hours time bins
+#Match the pattern with regex from time column and create 2 hours time bins
 
-```{r, echo=TRUE}
 clean_df <- clean_df %>%
   mutate(time_bin = gsub("^00:[0-9][0-9]:00|^01:[0-9][0-9]:00", "00-02", x = time))%>%
   mutate(time_bin = gsub("^02:[0-9][0-9]:00|^03:[0-9][0-9]:00", "02-04", x = time_bin))%>%
@@ -204,43 +191,37 @@ clean_df <- clean_df %>%
   mutate(time_bin = gsub("^18:[0-9][0-9]:00|^19:[0-9][0-9]:00", "18-20", x = time_bin))%>%     
   mutate(time_bin = gsub("^20:[0-9][0-9]:00|^21:[0-9][0-9]:00", "20-22", x = time_bin))%>%
   mutate(time_bin = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22-24", x = time_bin))
-```
 
-* From BG concentration measurements, we can derive if the patient is Hypoglycemic,  Hyperglycemic or has a blood glucose in Normal range. 
+# From BG concentration measurements, we can derive if the patient is Hypoglycemic,  Hyperglycemic or has a blood glucose in Normal range. 
 
-To simplify and study the effects of time and activity against the BG symptoms; 3 bins are created
+#To simplify and study the effects of time and activity against the BG symptoms; 3 bins are created
 
-```{r, echo=TRUE}
 clean_df <- clean_df %>%
   mutate(symptom = gsub("^([0-9]|[0-7][0-9])$", "Hypoglycemia", x = bg_conc))%>%
   mutate(symptom = gsub("^(8[0-9]|9[0-9]|1[0-9][0-9])$", "Normal", x = symptom))%>%
   mutate(symptom = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$", 
                         "Hyperglycemia", x = symptom))%>%
   mutate(symptom = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", "Hypoglycemia", x = symptom))
-```
 
-* Let's add a new column "activity" which represent a type of activity patient has done just before or after measuring the BG
+# Let's add a new column "activity" which represent a type of activity patient has done just before or after measuring the BG
 
-code    |   type of activity
---------| -------------------
-33 - 35 |   insulin dose
-58 - 64 |   meal (before - after)
-69 - 71 |   exercise
+#code    |   type of activity
+#--------| -------------------
+#33 - 35 |   insulin dose
+#58 - 64 |   meal (before - after)
+#69 - 71 |   exercise
 
-```{r, echo=TRUE}
 clean_df <- clean_df %>%
   mutate(activity = gsub("^(3[3-5])$", "insulin", x = code)) %>%
   mutate(activity = gsub("^(5[8-9]|6[0-4]|66|67|68)$", "meal", x = activity)) %>%
   mutate(activity = gsub("^(6[9]|7[0-1])$", "exercise", x = activity)) %>%
   mutate(activity = gsub("^(48|57|72)$", "unspecified", x = activity)) %>%
   mutate(activity = gsub("^(65)$", "hypo-measurement", x = activity))
-```
 
-* For predictive analysis add one more column similar to the time_bin. 
+#For predictive analysis add one more column similar to the time_bin. 
 
-This represents time groups in a numeric format e.g. 00-02 time_bin = 0 bin_num, etc.
+#This represents time groups in a numeric format e.g. 00-02 time_bin = 0 bin_num, etc.
 
-```{r, echo=TRUE}
 clean_df <- clean_df %>%
   mutate(bin_num = gsub("^00:[0-9][0-9]:00|^01:[0-9][0-9]:00", "0", x = time))%>%
   mutate(bin_num = gsub("^02:[0-9][0-9]:00|^03:[0-9][0-9]:00", "2", x = bin_num))%>%
@@ -256,9 +237,10 @@ clean_df <- clean_df %>%
   mutate(bin_num = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22", x = bin_num))
 ```
 
-# Exploratory Data analysis
 
-****
+The following description of the analysis is given without the complete R code, which can be found on my [**GitHub repository**](https://github.com/abhatte/Capstone-project/blob/master/source/diabetes.R).
+
+# Exploratory Data analysis
 
 The following variables will be investigated in this section:
 
@@ -268,7 +250,7 @@ The following variables will be investigated in this section:
   
 Since bg_conc is the only numeric variable in the data set; it’s distribution is observed by plotting the histogram.
 
-```{r, echo=TRUE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(clean_df, aes(bg_conc)) +
   geom_histogram(binwidth = 5, fill = "black", col = "red", alpha = 0.2) +
   labs(x = "Code", y = "BG concentration, mg/dl") +
@@ -279,18 +261,22 @@ We can see the high peak at 10 - 20 mg/dl BG
 
 Now that we have determined the distribution of BG concentration, the focus of the further  data visualisation and exploration will be to deep dive into other variables  and determine how they interact with one another.
 
+
+
 **Code vs Blood Glucose concentration**
 
-****
 
-```{r, echo=TRUE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(clean_df, aes(factor(code), bg_conc, col = symptom)) +
   geom_point() +
   geom_jitter() +
   labs(x = "Code", y = "Blood glucose value mg/dl") +
   ggtitle("Distribution of BG measurements based on Code and BG concentration", 
           subtitle = "Figure 2")
+```
 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(clean_df, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
@@ -300,7 +286,7 @@ ggplot(clean_df, aes(factor(code), bg_conc)) +
 
 To gain a better perspective at this, let’s plot the graph of BG concentration vs code by  grouping the codes into 3 sub categories.
 
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 c1 <- c(33:35)
 code_df1 <- clean_df[clean_df$code %in% c1,]
 ggplot(code_df1, aes(factor(code), bg_conc)) +
@@ -308,28 +294,36 @@ ggplot(code_df1, aes(factor(code), bg_conc)) +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
   ggtitle("Relation between Insulin dose and Blood Glucose concentration", subtitle = 
             "Figure 4")
+```
 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(code_df1, aes(factor(code))) +
   geom_histogram(stat = "count", fill= "black", col= "red", alpha= 0.2) +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
   ggtitle("Distribution of code (Insulin)", subtitle = "Figure 5")
 ```
 
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 c2 <- c(48, 57:64)
 code_df2 <- clean_df[clean_df$code %in% c2,]
 ggplot(code_df2, aes(factor(code), bg_conc)) +
   geom_boxplot() +
   labs(x = "Code", y = "BG concentration (mg/dl)") +
   ggtitle("Relation between Meal and Blood Glucose concentration", subtitle = "Figure 6")
+```
 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(code_df2, aes(factor(code))) +
   geom_histogram(fill= "black", col= "red", alpha= 0.2, stat = "count") +
   labs(x = "Codes representing Meal", y = "BG concentration (mg/dl)") +
   ggtitle("Distribution of measurements based on Pre/ Post Meal", subtitle = "Figure 7")
 ```
 
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 c3 <- c(65:72)
 code_df3 <- clean_df[clean_df$code %in% c3,]
 ggplot(code_df3, aes(factor(code), bg_conc)) +
@@ -338,7 +332,8 @@ ggplot(code_df3, aes(factor(code), bg_conc)) +
   ggtitle("Relation between exercise and Blood Glucose concentration", subtitle = "Figure 8")
 ```
 
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(clean_df, aes(factor(activity), bg_conc, group=activity, col=activity)) +
   geom_point() +
   geom_boxplot() +
@@ -350,23 +345,25 @@ ggplot(clean_df, aes(factor(activity), bg_conc, group=activity, col=activity)) +
 
 **Code vs Blood Glucose concentration**
 
-****
 
 * From Figure 1, we can clearly see a pattern between BG concentration and the type of activity. The patients suffer from Hyperglycemia before or after a meal. 
 
 * Also there are three groups which show the similar patterns. To explore more, the three individual plots have been created. Statistical summary of which is as follows
 
 * Figure 4, Relation between Insulin dose and Blood Glucose concentration
+
 ```{r, echo=FALSE}
 summary(code_df1$bg_conc)
 ```
 
 * Figure 6, Relation between Meal and Blood Glucose concentration
+
 ```{r, echo=FALSE}
 summary(code_df2$bg_conc)
 ```
 
 * Figure 8, Relation between exercise and Blood Glucose concentration
+
 ```{r, echo=FALSE}
 summary(code_df3$bg_conc)
 ```
@@ -375,22 +372,23 @@ summary(code_df3$bg_conc)
 
 * Figure 9 nicely compares between the types of activities and BG concentration. Blood glucose level decreases just after taking the isulin dose. It even drops down further down after the exercise. However, the BG notably increases after a meal with a median of around 150 mg/dl
 
+****
 
 **Time vs Blood Glucose concentration**
 
-****
 Since time is a continuous variable, it will be difficult to explore the data when time is plotted on x- axis. Which is why the time intervals of 2 hours (time_bin) were created
 
 We want to explore the distribution of Hypoglycemia, Normal BG concentration and Hyperglycemia based on time intervals.
 
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(clean_df, aes(factor(time_bin))) +
  geom_histogram(stat = "count", fill= "black", col= "red", alpha= 0.5) +
  labs(x = "Hours") +
  ggtitle("Distribition of BG measurements across time", subtitle = "Figure 10")
 ```
 
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(clean_df, aes(factor(time_bin), bg_conc, col = symptom)) +
   geom_point() +
   geom_jitter() +
@@ -399,7 +397,7 @@ ggplot(clean_df, aes(factor(time_bin), bg_conc, col = symptom)) +
 ```
 
 
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
   geom_boxplot() +
   labs(x = "Hours", y = "Blood glucose concentration") +
@@ -409,8 +407,6 @@ ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
 ### Conclusion 2: Exploratory Data Analysis
 
 **Time vs Blood Glucose concentration**
-
-****
 
 Each point here represents number of Blood glucose measurements by the patients in 24 hours for several weeks or months.
 
@@ -424,13 +420,260 @@ Howerver, there is a notable drop in median of BG concentration from 4 - 10 and 
 
 *******
 
+# Regression Analysis
+
+As discussed in the objective of this project, we will be using Logistic Regression classification algorithm to predict Hyperglycemia (high blood glucose) or Hypoglycemia (low blood glucose) in patients. 
+
+These factors play an important role in blood glucose management and are directly associated with diet and exercise.
+
+Through predicting the occurrence of these symptoms and the type of activities they are associated with, we can give recommendations to the patient.
+
+******
+
+**Model 1**
+
+* In this section we have built a model that predicts hyperglycemic symptoms based on codes 
+
+* The codes here represent different types of activities related to meal, exercise, insulin dose etc. (refer to the table from Description of Dataset)
+
+* Before building the prediction model, we have spit the data into train and test dat frames with 70:30 ratio.
+
+* After creating a confusion matrix, the accuracy was taken into consideration to select the model.
+
+* To pick a good threshold value, ROC curve was created
 
 
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+clean_df <- clean_df %>%
+  mutate(sympcode = gsub("^([0-9]|[0-7][0-9]|80)$", 0, x = bg_conc))%>%
+  mutate(sympcode = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", 0, x = sympcode))%>%
+  mutate(sympcode = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$",
+                         1, x = sympcode)) %>%
+  mutate(sympcode = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", 0, x = sympcode))
+
+str(clean_df)
+clean_df$sympcode <- as.factor(clean_df$sympcode)
+clean_df$bin_num <- as.numeric(clean_df$bin_num)
+clean_df$activity <- as.factor(clean_df$activity)
+str(clean_df)
+# First, let's find the accuracy of baseline model
+table(clean_df$sympcode)
+# 24995 patients not hyperglycemic & 3851 are hyperglycemic
+# since not hyperglycemic are more common than hyperglycemic, we'll predict all patients are
+# not hyperglycemic
+24995/28847
+# Baseline model accuracy = 87%
+# Now, let's create a binomial logistic regression model that Predicts Hyperglycemic symptoms 
+# based on codes
+set.seed(844)
+# split data into  70:30 ratio
+split <- sample.split(clean_df$sympcode, SplitRatio = 0.7)
+train <- subset(clean_df, split == TRUE)
+test <- subset(clean_df, split == FALSE)
+#create a model
+symp.logit <- glm(sympcode~code+bin_num, data = train, family = "binomial")
+summary(symp.logit) 
+# code 65 - 72 have negative coefficients and are not significant
+# Null deviance: 15872, Residual deviance: 11151, AIC: 11193
+
+# higher value in coefficients table are indicative of hyperglycemia
+
+pred.test <- predict(symp.logit, type = "response", newdata = test)
+summary(pred.test)
+# create confusion matrix, t = 0.5
+table(test$sympcode, pred.test > 0.5)
+```
 
 
+**Results**
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+table(test$sympcode, pred.test > 0.5)
+```
 
 
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# ROC curve
+ROCRpred <- prediction(pred.test, test$sympcode)
+ROCRperf <- performance(ROCRpred, "tpr", "fpr")
+plot(ROCRperf, colorize = TRUE, print.cutoffs.at=seq(0,1,0.1), text.adj=c(-0.2,1.7))
+```
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+# calculate AUC
+as.numeric(performance(ROCRpred, "auc")@y.values) # 0.83
+# Calculate the F1 score/ harmonic mean = 2TP/(2TP+FP+FN)  (t = 0.5)
+(2*7449)/(2*7449+1121+50) # 0.92
+```
 
+
+* Our model rarely predicts the risk of hyperglycemia above 50% and the accuracy of the model (86%) was very near to the accuracy of the baseline model (87%)
+
+* Model can differentiate between patients who have probability of suffering from hyperglycemia (AUC = 83%)
+
+* Note that the accuracy of our test is determined by F1 score. The value of which is 0.92 suggesting the strong accuracy of the model.
+
+*******
+
+**Model 2**
+
+* In this section we have built a model that predicts blood glucose concentration based on activities (Meal)
+
+* Activities are nothing but the similar codes grouped together into 5 bins
+    + Insulin (code: 33 - 35)
+    + Meal (code: 58 - 64, 66, 67, 68)
+    + Exercise (code: 69 - 71 )
+    + Unspecified (code: 48, 57, 72)
+    + Hypoglycemic measurements (code: 65)
+    
+* Similar to model 1 we have split the data in 70:30 ratio into a train and test data
+
+* After creating a confusion matrix, the accuracy was taken into consideration to select the model.
+
+* To pick a good threshold value, ROC curve was created
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+# Binomial regression activity ~ bg_conc
+
+clean_df <- clean_df %>%
+  mutate(act.code = gsub("^(3[3-5])$", 0, x = code)) %>%  # insulin = 0
+  mutate(act.code = gsub("^(5[8-9]|6[0-4]|66|67|68)$", 1, x = act.code)) %>%   #meal = 1
+  mutate(act.code = gsub("^(6[9]|7[0-1])$", 0, x = act.code)) %>% #exercise = 0
+  mutate(act.code = gsub("^(48|57|72)$", 0, x = act.code)) %>% #unspecified = 0
+  mutate(act.code = gsub("^(65)$", 0, x = act.code)) #hypo-measurement = 0
+
+str(clean_df)
+clean_df$act.code <- as.factor(clean_df$act.code)
+# First, let's find the accuracy of baseline model
+table(clean_df$act.code)
+17842/28847
+# Baseline model accuracy = 61%
+
+# Now, let's create a binomial logistic regression model that Predicts BG concentration based # on activities (meal)
+
+set.seed(844)
+# split data into  70:30 ratio
+act.split <- sample.split(clean_df$act.code, SplitRatio = 0.7)
+act.train <- subset(clean_df, split == TRUE)
+act.test <- subset(clean_df, split == FALSE)
+#create a model
+act.logit <- glm(act.code~bg_conc, data = act.train, family = "binomial")
+summary(act.logit) 
+
+
+pred.test1 <- predict(act.logit, type = "response", newdata = act.test)
+summary(pred.test1)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+table(act.test$act.code, pred.test1 > 0.5)
+# accuracy of the model = (TP+TN)/(TP+TN+FP+FN)
+# (4679+2200)/(4679+2200+640+1136) # 0.79
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# ROC curve
+ROCRact.pred <- prediction(pred.test1, act.test$act.code)
+ROCRact.perf <- performance(ROCRact.pred, "tpr", "fpr")
+plot(ROCRact.perf, colorize = TRUE, print.cutoffs.at=seq(0,1,0.1), text.adj=c(-0.2,1.7))
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+# calculate AUC
+as.numeric(performance(ROCRact.pred, "auc")@y.values) # 0.88
+
+# Calculate the F1 score/ harmonic mean = 2TP/(2TP+FP+FN)  (t = 0.5)
+(2*4679)/(2*4679+1136+640) # 0.84
+```
+
+**Results**
+
+* The model 2 has an accuracy rate of 79% which is better than our baseline model with accuracy 61%
+
+* The AUC for this model is 88% and the value of F1 score is 0.84 which suggest the good accuracy of the model in prediction blood glucose concentration.
+
+*******
+
+**Model 3**
+
+* In this section we have built a multinomial model that predicts Hypoglycemia or Hyperglycemia based on code
+
+* We have split the data in 70:30 ratio into a train and test data
+
+* After creating a confusion matrix for multinomial regression, we calculated the classification and misclassification by the model
+
+* Finally a 2-tailed z test was performed to predict the probability of factors associating with blood glucode contration
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+# Predict Hypo or Hyperglycemia using multinomial logistic regression
+
+# assign, Normal = 1
+# Hypoglycemia = 2
+# Hyperglycemia = 3
+# Store the results in a new column "sympcode"
+
+clean_df <- clean_df %>%
+  mutate(sympcode.mult = gsub("^([0-9]|[0-7][0-9]|80)$", 2, x = bg_conc))%>%
+  mutate(sympcode.mult = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", 1, x = sympcode.mult))%>%
+  mutate(sympcode.mult = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$",
+                              3, x = sympcode.mult)) %>%
+  mutate(sympcode.mult = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", 2, x = sympcode.mult))
+
+clean_df$sympcode.mult <- as.factor(clean_df$sympcode.mult)
+
+# install.packages("nnet")
+# library(nnet)
+
+clean_df$sympcode.mult <- as.factor(clean_df$sympcode.mult)
+
+# Relevel the column; where Normal = 1
+clean_df$out <- relevel(clean_df$sympcode.mult, ref = "1")
+
+set.seed(844)
+mult.split <- sample.split(clean_df$sympcode.mult, SplitRatio = 0.7)
+mult.train <- subset(clean_df, split == TRUE)
+mult.test <- subset(clean_df, split == FALSE)
+# Let's create a multinomial model to predict Normal BG, hypoglycemia & hyperglycemia
+# based on code
+mult.mod <- multinom(out~code, data = mult.train)
+summary(mult.mod)
+p <- predict(mult.mod, newdata = mult.test)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+table(p, mult.test$sympcode.mult)
+```
+
+* The model 3 has the misclassification rate of only 22%. Which means that the model classifies the test data correctly for 78%
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+z <- summary(mult.mod)$coefficients/summary(mult.mod)$standard.errors
+p <- (1 - pnorm(abs(z), 0 , 1)) * 2
+p
+```
+
+* The result of 2-tailed z test shows that the p value of codes 33, 34, 48, & 57 - 64 is almost zero. Hence the confidence level for these codes is very high. 
+
+This suggests that the activities represented by these codes are responsible for Hypoglycemia.
+
+******
+
+# Discussions
+
+* Based on our results, we can reccommend to patients to not to take insulin dose right after the exercise as blood glucose is already below normal.
+
+* Meal is directly associated with the risk of having hyperglycemia and hypoglycemia. 
+Therefore it is reccommended to eat meals at the similar time everyday to keep track of insulin doses needed per day.
+
+*****
+
+# Future Work
+
+* Each type of insulin has an onset of effect, time of peak action and effective duration. This will be explored in detail in future to see which type of insulin is effective in long run.
+
+* In this project we have used only the _internal validation_ i.e we have split the data from 70 diabetes patients and predicted the outcome. However, we don't know if the model generalizes to other population.
+For this purpose a similar dataset will be combined with our dataset to predict the blood glucose level or hyperglycemia and hypoglycemia.
+
+* Similarly, we can combine the data set of healthy patients who are at a high risk of developing diabetes and try to predict the probability with our data set.
 
 
 
