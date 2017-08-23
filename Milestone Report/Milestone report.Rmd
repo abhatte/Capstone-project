@@ -1,10 +1,15 @@
-# Capstone project milestone report
-*******
-Ashwini Bhatte
-2 August 2017
+---
+title: "Capstone project milestone report"
+author: "Ashwini Bhatte"
+date: "02/08/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
 
-## Introduction
-*******
+
+# Introduction
+
 **Insulin dependent diabetes mellitus** (IDDM) also known as **Type 1 diabetes** is a chronic illness characterised by the body’s inability to produce insulin due to the autoimmune destruction of the beta cells in the pancreas.
 
 Patients with type 1 diabetes mellitus (DM) require lifelong insulin therapy. Most require 2 or more injections of insulin daily, with doses adjusted on the basis of self-monitoring of blood glucose levels. Long-term management requires a multidisciplinary approach that includes physicians, nurses, dieticians, and selected specialists.
@@ -26,8 +31,8 @@ In addition to being a lifelong disease, the treatment of DM is multifaceted mak
 
 The goal of this project is to extract understandable patterns and associations from data through data visualisation.
 
-## Dataset
-*****
+# Dataset
+
 The dataset consists of 70 .tsv files and a data code and a domain description file.
 Each of which represent the data for a single DM patient.
 Each file contains 4 attributes: Date, Time, Code and Value.
@@ -108,15 +113,19 @@ This is how the data frame looks like
 head(df)
 ```
 
-## Data limitations
 *****
+
+# Data limitations
+
 The main limitation of this dataset is the occurrence of unspecified blood glucose measurement twice in the code feature.
 These two codes are treated separately as this is an important information, which can not be rejected.
 
 Also, it would have been useful to include demographics of a patient such as Age and Sex, to predict how blood glucose concentration varies.
 
-## Data wrangling and cleaning
 *****
+
+# Data wrangling and cleaning
+
 The diabetes data set from UCI machine learning repository is relatively comprehensive and well put together and did not require any major transformations.
 
 However, since there are 70 different .tsv files for individual patients, they need to be merged in a single data frame. 
@@ -247,9 +256,10 @@ clean_df <- clean_df %>%
   mutate(bin_num = gsub("^22:[0-9][0-9]:00|^23:[0-9][0-9]:00", "22", x = bin_num))
 ```
 
+*****
 
 # Exploratory Data analysis
-****
+
 
 The following variables will be investigated in this section:
 
@@ -270,9 +280,10 @@ We can see the high peak at 10 - 20 mg/dl BG
 
 Now that we have determined the distribution of BG concentration, the focus of the further  data visualisation and exploration will be to deep dive into other variables  and determine how they interact with one another.
 
+****
+
 **Code vs Blood Glucose concentration**
 
-****
 
 ```{r, echo=TRUE}
 ggplot(clean_df, aes(factor(code), bg_conc, col = symptom)) +
@@ -337,11 +348,10 @@ ggplot(clean_df, aes(factor(activity), bg_conc, group=activity, col=activity)) +
   ggtitle("Comparison between activity and BG concentration", subtitle = "Figure 9")
 ```
 
-### Conclusion 1: Exploratory Data Analysis
+## Conclusion 1: Exploratory Data Analysis
 
 **Code vs Blood Glucose concentration**
 
-****
 
 * From Figure 1, we can clearly see a pattern between BG concentration and the type of activity. The patients suffer from Hyperglycemia before or after a meal. 
 
@@ -366,10 +376,11 @@ summary(code_df3$bg_conc)
 
 * Figure 9 nicely compares between the types of activities and BG concentration. Blood glucose level decreases just after taking the isulin dose. It even drops down further down after the exercise. However, the BG notably increases after a meal with a median of around 150 mg/dl
 
+****
 
 **Time vs Blood Glucose concentration**
 
-****
+
 Since time is a continuous variable, it will be difficult to explore the data when time is plotted on x- axis. Which is why the time intervals of 2 hours (time_bin) were created
 
 We want to explore the distribution of Hypoglycemia, Normal BG concentration and Hyperglycemia based on time intervals.
@@ -397,11 +408,10 @@ ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
   ggtitle("Association between time and BG concentration", subtitle = "Figure 12")
 ```
 
-### Conclusion 2: Exploratory Data Analysis
+## Conclusion 2: Exploratory Data Analysis
 
 **Time vs Blood Glucose concentration**
 
-****
 
 Each point here represents number of Blood glucose measurements by the patients in 24 hours for several weeks or months.
 
