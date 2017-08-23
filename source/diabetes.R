@@ -411,8 +411,8 @@ table(clean_df$act.code)
 17842/28847
 # Baseline model accuracy = 61%
 
-# Now, let's create a binomial logistic regression model that Predicts Hyperglycemic symptoms 
-# based on codes
+# Now, let's create a binomial logistic regression model that Predicts BG concentration based 
+# on activities (meal)
 
 set.seed(844)
 # split data into  70:30 ratio
@@ -490,15 +490,15 @@ summary(mult.mod)
 
 p <- predict(mult.mod, newdata = mult.test)
 # create confusion matrix
-cm <- table(p, mult.test$sympcode.mult)
-print(cm)
+table(p, mult.test$sympcode.mult)
+
 
 #correct classification
 (2222+4555+35)/8665 # 0.78
 
 # misclassification by model = 22%
 
-#We have created a model (mult.mod) that correctly classifies the data 78% of the time
+# We have created a model (mult.mod) that correctly classifies the data 78% of the time
 
 # 2-tailed z test
 
@@ -509,7 +509,4 @@ p
 # 1 - p value = confidence interval
 # since code 33, 34, 48, 57, 58, 59, 60, 61, 62, 63, 64 have p value almost 0
 # hence higher confidence interval and therefore more significant in predicting hypoglycemia
-
-
-
 
