@@ -1,8 +1,9 @@
 ---
-title: 'Statistical analysis - Capstone project'
+title: "Statistical analysis - Capstone project"
 author: "Ashwini Bhatte"
 date: "05/08/2017"
 output:
+  pdf_document: default
   html_document: default
 ---
 
@@ -92,7 +93,6 @@ The following variables will be investigated in this section:
   
   * Time vs Blood Glucose concentration
 
-****
 
 Since bg_conc is the only numeric variable in the data set; it’s distribution is observed by plotting the histogram.
 
@@ -107,9 +107,10 @@ We can see the high peak at 10 - 20 mg/dl BG
 
 Now that we have determined the distribution of BG concentration, the focus of the further  data visualisation and exploration will be to deep dive into other variables  and determine how they interact with one another.
 
+****
+
 **Code vs Blood Glucose concentration**
 
-****
 
 ```{r, echo=TRUE}
 ggplot(clean_df, aes(factor(code), bg_conc, col = symptom)) +
@@ -174,11 +175,12 @@ ggplot(clean_df, aes(factor(activity), bg_conc, group=activity, col=activity)) +
   ggtitle("Comparison between activity and BG concentration", subtitle = "Figure 9")
 ```
 
+****
+
 ### Conclusion 1: Exploratory Data Analysis
 
 **Code vs Blood Glucose concentration**
 
-****
 
 * From Figure 1, we can clearly see a pattern between BG concentration and the type of activity. The patients suffer from Hyperglycemia before or after a meal. 
 
@@ -203,10 +205,10 @@ summary(code_df3$bg_conc)
 
 * Figure 9 nicely compares between the types of activities and BG concentration. Blood glucose level decreases just after taking the isulin dose. It even drops down further down after the exercise. However, the BG notably increases after a meal with a median of around 150 mg/dl
 
+****
 
 **Time vs Blood Glucose concentration**
 
-****
 Since time is a continuous variable, it will be difficult to explore the data when time is plotted on x- axis. Which is why the time intervals of 2 hours (time_bin) were created
 
 We want to explore the distribution of Hypoglycemia, Normal BG concentration and Hyperglycemia based on time intervals.
@@ -234,11 +236,11 @@ ggplot(clean_df, aes(factor(time_bin), bg_conc)) +
   ggtitle("Association between time and BG concentration", subtitle = "Figure 12")
 ```
 
+****
+
 ### Conclusion 2: Exploratory Data Analysis
 
 **Time vs Blood Glucose concentration**
-
-****
 
 Each point here represents number of Blood glucose measurements by the patients in 24 hours for several weeks or months.
 
