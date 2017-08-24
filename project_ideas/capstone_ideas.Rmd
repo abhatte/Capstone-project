@@ -1,0 +1,47 @@
+---
+title: "Capstone Project Ideas"
+author: "Ashwini Bhatte"
+date: "12/06/2017"
+output: html_document
+---
+
+# Diabetes Data Set
+
+Insulin dependent diabetes mellitus (IDDM) also known as Type 1 diabetes is a form of diabetes in which high blood sugar is resulted. Diabetes management involves several important factors such as Diet, exercise and exogenous insulin therapy. The given data set contains the records of 70 Diabetes patients over a period of few weeks to months.
+
+**Data**
+
+https://archive.ics.uci.edu/ml/datasets/Diabetes
+
+**Question**
+The project aims to find a pattern between time of the meal &/or diet and blood glucose level. In addition to that, it could explore the relation between several factors related to blood glucose level such as insulin dosage, physical activity, pre and postprandial measurements etc.
+
+***
+
+# Antimicrobial Resistance
+
+Antimicrobials (antibiotics) are medicines used to prevent and treat bacterial infections. Antibiotic resistance occurs when bacteria change in response to the use of these medicines. Due to increasing global availability and over the counter sale of antibiotics in low or middle income countries has resulted in emergence of resistance in any remaining bacteria.
+The data includes information about resistance to key antimicrobial groups of seven microorganisms of major public health importance in Europe.
+
+**Data**
+
+http://data.europa.eu/euodp/de/data/dataset/922479c9-6d60-4617-aa09-e47b9510b595
+
+**Question**
+
+The project would aim to explore antimicrobial resistance of each bacteria with respect to countries. Secondly, it could also predict the relation microbial resistance towards different antimicrobials.
+
+*******
+
+# World development indicators
+There are several indicators which affect the world development, some of which involves poverty & shared prosperity, environment, economy, etc. The data set that I have chosen features the effect of environment on world development. This data set includes more that 140 indicators related to the use of natural resources and changes in natural and built environment.
+
+**Data**
+
+http://wdi.worldbank.org/tables
+
+**Question**
+
+The project aims to predict how the use of natural resources affect the development of countries.
+
+******
