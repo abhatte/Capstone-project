@@ -124,7 +124,7 @@ clean_df$bin_num <- as.numeric(clean_df$bin_num)
 
 ## Exploratory data analysis
 # Since bg_conc is the only numeric variable in the data set; 
-# it’s distribution is observed by plotting the histogram.
+# it???s distribution is observed by plotting the histogram.
 # Fig.1
 
 ggplot(clean_df, aes(bg_conc)) +
@@ -160,7 +160,7 @@ ggplot(clean_df, aes(factor(code), bg_conc)) +
 
 summary(clean_df$bg_conc)
 
-#To gain a better perspective at this, let’s plot the graph of BG concentration vs code by 
+#To gain a better perspective at this, let???s plot the graph of BG concentration vs code by 
 #grouping the codes into 3 sub categories.
 
 # group 1: code 33 - 35 represents codes for type of insulin dose
@@ -508,5 +508,5 @@ p
 
 # 1 - p value = confidence interval
 # since code 33, 34, 48, 57, 58, 59, 60, 61, 62, 63, 64 have p value almost 0
-# hence higher confidence interval and therefore more significant in predicting hypoglycemia
+# hence higher confidence interval and therefore more significant in predicting hypoglycemia.
 
