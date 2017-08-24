@@ -364,6 +364,42 @@ table(test$symp_num, predictTest > 0.3)
 ```
 
 
+# Regression Analysis
+
+As discussed in the objective of this project, we will be using Logistic Regression classification algorithm to predict Hyperglycemia (high blood glucose) or Hypoglycemia (low blood glucose) in patients. 
+
+These factors play an important role in blood glucose management and are directly associated with diet and exercise.
+
+Through predicting the occurrence of these symptoms and the type of activities they are associated with, we can give recommendations to the patient.
+
+In this section we will build the model using glm.
+
+**Preparing the data for binomial regression**
+
+We will predict the hyperglycemia based on codes. 
+
+For this purpose, a new culumn sympcode was created and the BG concentrations were encoded as follows:
+
+Hypoglycemia = 0
+
+Normal = 0
+
+Hyperglycemia = 1
+
+```{r}
+clean_df <- clean_df %>%
+  mutate(sympcode = gsub("^([0-9]|[0-7][0-9]|80)$", 0, x = bg_conc))%>%
+  mutate(sympcode = gsub("^(8[1-9]|9[0-9]|1[0-9][0-9])$", 0, x = sympcode))%>%
+  mutate(sympcode = gsub("^(2[0-9][0-9]|3[0-9][0-9]|4[0-9][0-9]|50[0-1])$",
+                         1, x = sympcode)) %>%
+  mutate(sympcode = gsub("^(1.5|2.5|3.5|4.5|6.5|7.5)$", 0, x = sympcode))
+
+str(clean_df)
+clean_df$sympcode <- as.factor(clean_df$sympcode)
+clean_df$bin_num <- as.numeric(clean_df$bin_num)
+clean_df$activity <- as.factor(clean_df$activity)
+str(clean_df)
+```
 
 
 
