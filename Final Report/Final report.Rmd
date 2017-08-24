@@ -9,7 +9,7 @@ output:
 
 # Introduction
 
-Insulin dependent diabetes mellitus (IDDM) also known as Type 1 diabetes is a chronic illness characterised by the body’s inability to produce insulin due to the autoimmune destruction of the beta cells in the pancreas.
+Insulin dependent diabetes mellitus (IDDM) also known as Type 1 diabetes is a chronic illness characterised by the body???s inability to produce insulin due to the autoimmune destruction of the beta cells in the pancreas.
 
 Patients with type 1 diabetes mellitus (DM) require lifelong insulin therapy. Most require 2 or more injections of insulin daily, with doses adjusted on the basis of self-monitoring of blood glucose levels. Long-term management requires a multidisciplinary approach that includes physicians, nurses, dieticians, and selected specialists.
 
@@ -89,7 +89,7 @@ The goal of this project is to,
 
 * Extract understandable patterns and associations from data through data visualisation.
 
-* Predict Hyperglycemia (high blood glucose) or Hypoglycemia (low blood glucose)  in patients.
+* Predict the blood glucose concentration or Hyperglycemia (high blood glucose) and Hypoglycemia (low blood glucose)  in patients.
 
 Through finding a pattern in blood glucose levels and the type of activities before or after the BG measurement, we can give recommendations to the patient.
 
@@ -238,7 +238,7 @@ clean_df <- clean_df %>%
 ```
 
 
-The following description of the analysis is given without the complete R code, which can be found on my [**GitHub repository**](https://github.com/abhatte/Capstone-project/blob/master/source/diabetes.R).
+The following description of the analysis is given without the complete R code, which can be found on my [**GitHub repository**](https://github.com/abhatte/Capstone-project/blob/master/r_code/diabetes.R).
 
 # Exploratory Data analysis
 
@@ -248,7 +248,7 @@ The following variables will be investigated in this section:
   
   * Time vs Blood Glucose concentration
   
-Since bg_conc is the only numeric variable in the data set; it’s distribution is observed by plotting the histogram.
+Since bg_conc is the only numeric variable in the data set; it???s distribution is observed by plotting the histogram.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(clean_df, aes(bg_conc)) +
@@ -284,7 +284,7 @@ ggplot(clean_df, aes(factor(code), bg_conc)) +
 ```
 
 
-To gain a better perspective at this, let’s plot the graph of BG concentration vs code by  grouping the codes into 3 sub categories.
+To gain a better perspective at this, let???s plot the graph of BG concentration vs code by  grouping the codes into 3 sub categories.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 c1 <- c(33:35)
@@ -586,7 +586,7 @@ as.numeric(performance(ROCRact.pred, "auc")@y.values) # 0.88
 
 **Results**
 
-* The model 2 has an accuracy rate of 79% which is better than our baseline model with accuracy 61%
+* The model 2 has an accuracy of 79% which is better than our baseline model with accuracy 61%
 
 * The AUC for this model is 88% and the value of F1 score is 0.84 which suggest the good accuracy of the model in prediction blood glucose concentration.
 
@@ -638,6 +638,10 @@ summary(mult.mod)
 p <- predict(mult.mod, newdata = mult.test)
 ```
 
+****
+
+**Results**
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 table(p, mult.test$sympcode.mult)
 ```
@@ -653,13 +657,16 @@ p
 
 * The result of 2-tailed z test shows that the p value of codes 33, 34, 48, & 57 - 64 is almost zero. Hence the confidence level for these codes is very high. 
 
-This suggests that the activities represented by these codes are responsible for Hypoglycemia.
+This suggests that the activities represented by these codes are responsible for developing symptoms of Hypoglycemia.
 
 ******
 
 # Discussions
 
-* Based on our results, we can reccommend to patients to not to take insulin dose right after the exercise as blood glucose is already below normal.
+* Since the model 1 results were not fantastic, we would not make any reccommendations to our clients based on it.
+
+* However, based on model 2 and model 3 results, we can reccommend the patients to not to take insulin dose right after the exercise as blood glucose is already below normal.
+And going so will increase the risk of severe hypoglycemia. 
 
 * Meal is directly associated with the risk of having hyperglycemia and hypoglycemia. 
 Therefore it is reccommended to eat meals at the similar time everyday to keep track of insulin doses needed per day.
@@ -675,6 +682,6 @@ For this purpose a similar dataset will be combined with our dataset to predict 
 
 * Similarly, we can combine the data set of healthy patients who are at a high risk of developing diabetes and try to predict the probability with our data set.
 
-
+*******
 
 
