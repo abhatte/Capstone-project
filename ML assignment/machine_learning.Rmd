@@ -2,8 +2,6 @@
 title: 'Machine Learning - Capstone project'
 author: "Ashwini Bhatte"
 date: "22/08/2017"
-output:
-  html_document: default
 ---
 
 
