@@ -9,7 +9,7 @@ output:
 
 # Introduction
 
-Insulin dependent diabetes mellitus (IDDM) also known as Type 1 diabetes is a chronic illness characterised by the body???s inability to produce insulin due to the autoimmune destruction of the beta cells in the pancreas.
+Insulin dependent diabetes mellitus (IDDM) also known as Type 1 diabetes is a chronic illness characterised by the body's inability to produce insulin due to the autoimmune destruction of the beta cells in the pancreas.
 
 Patients with type 1 diabetes mellitus (DM) require lifelong insulin therapy. Most require 2 or more injections of insulin daily, with doses adjusted on the basis of self-monitoring of blood glucose levels. Long-term management requires a multidisciplinary approach that includes physicians, nurses, dieticians, and selected specialists.
 
