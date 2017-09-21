@@ -1,5 +1,5 @@
 ---
-title: 'Outpatient Management Recommendation: Type 1 Diabetes'
+title: 'A Data Driven Approach to Blood Glucose Prediction in Insulin-Dependent Diabetes Patients'
 author: "Ashwini Bhatte"
 date: "22/08/2017"
 output:
